@@ -80,7 +80,19 @@ export const fetchPostsAsync = createAsyncThunk<
       throw new Error(errorText || "Unauthorized");
     }
 
-    return await response.json();
+    const data = await response.json();
+
+    return {
+      posts: (data.posts as Post[]).map((post) => ({
+        ...post,
+        media: post.media.map((m: any) =>
+          typeof m === "string" ? { url: m } : m
+        ),
+      })),
+      hasMore: data.hasMore,
+      currentPage: data.currentPage,
+      totalPages: data.totalPages,
+    };
   } catch (error: any) {
     return thunkAPI.rejectWithValue(error.message);
   }
