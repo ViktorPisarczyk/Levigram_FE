@@ -6,16 +6,6 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: "Inter", sans-serif;
-  background: var(--primary);
-  background-image: var(--background-image);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
 :root {
   --primary: #ffffff;
   --secondary: #dfe7fd;
@@ -45,6 +35,29 @@ body {
   --box-shadow: 0 0 10px rgba(200, 180, 255, 0.15),
     0 0 18px rgba(200, 180, 255, 0.1);
   --background-image: none;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  scroll-behavior: smooth;
+  touch-action: manipulation;
+  background: var(--primary);
+  background-image: var(--background-image);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  font-family: "Inter", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea {
+  font-size: 16px;
 }
 
 button {

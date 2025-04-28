@@ -99,7 +99,7 @@ const App: React.FC = () => {
           onClick={handleInstallClick}
           style={{
             position: "fixed",
-            bottom: "20px",
+            top: "20px",
             right: "20px",
             padding: "10px 20px",
             background: "var(--quinary)",
