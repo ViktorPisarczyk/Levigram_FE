@@ -1,11 +1,11 @@
 import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-import "./PostCreateForm.scss";
 import { addPost } from "./postSlice";
 import heic2any from "heic2any";
 import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
+import "./PostCreateForm.scss";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,53 +25,12 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
-  const handleMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
+  const uploadMediaFiles = async (files: File[]) => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-    const files = Array.from(e.target.files);
-    const processedFiles: File[] = [];
-
-    for (const file of files) {
-      if (file.type === "image/heic" || file.name.endsWith(".heic")) {
-        try {
-          const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-
-          const converted = new File(
-            [blob as BlobPart],
-            file.name.replace(/\.heic$/, ".jpg"),
-            { type: "image/jpeg" }
-          );
-
-          processedFiles.push(converted);
-        } catch (err) {
-          console.error("HEIC-Konvertierung fehlgeschlagen", err);
-        }
-      } else {
-        await new Promise<void>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve();
-          reader.onerror = () => resolve();
-          reader.readAsArrayBuffer(file);
-        });
-
-        processedFiles.push(file);
-      }
-    }
-
-    setMediaFiles((prev) => [...prev, ...processedFiles]);
-  };
-
-  const handleSubmit = async () => {
-    if (!content.trim() && mediaFiles.length === 0) return;
-
-    setUploading(true);
-    try {
-      const token = localStorage.getItem("token");
-
-      const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
-      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-      const uploadPromises = mediaFiles.map(async (file) => {
+    const uploads = await Promise.all(
+      files.map(async (file) => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", uploadPreset);
@@ -88,16 +47,71 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         const data = await res.json();
 
         if (!res.ok || !data.secure_url) {
-          console.error("❌ Cloudinary Upload fehlgeschlagen:", data);
-          throw new Error(data.message || "Fehler beim Cloudinary Upload");
+          console.error("❌ Cloudinary Upload failed:", data);
+          throw new Error(data.message || "Cloudinary upload error");
         }
 
-        return data.secure_url;
-      });
+        let posterUrl: string | undefined;
+        if (file.type.startsWith("video/")) {
+          posterUrl = data.secure_url.replace("/upload/", "/upload/so_1/");
+        }
 
-      const uploadedUrls = await Promise.all(uploadPromises);
+        return {
+          mediaUrl: data.secure_url,
+          posterUrl,
+        };
+      })
+    );
 
-      const postRes = await fetch("${API_URL}/posts", {
+    return uploads;
+  };
+
+  const handleMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const files = Array.from(e.target.files);
+    const processedFiles: File[] = [];
+
+    for (const file of files) {
+      if (file.type === "image/heic" || file.name.endsWith(".heic")) {
+        try {
+          const blob = await heic2any({ blob: file, toType: "image/jpeg" });
+          const converted = new File(
+            [blob as BlobPart],
+            file.name.replace(/\.heic$/, ".jpg"),
+            { type: "image/jpeg" }
+          );
+          processedFiles.push(converted);
+        } catch (err) {
+          console.error("HEIC conversion failed:", err);
+        }
+      } else {
+        await new Promise<void>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve();
+          reader.onerror = () => resolve();
+          reader.readAsArrayBuffer(file);
+        });
+        processedFiles.push(file);
+      }
+    }
+
+    setMediaFiles((prev) => [...prev, ...processedFiles]);
+  };
+
+  const handleSubmit = async () => {
+    if (!content.trim() && mediaFiles.length === 0) return;
+
+    setUploading(true);
+    try {
+      const token = localStorage.getItem("token");
+
+      const uploads = await uploadMediaFiles(mediaFiles);
+
+      const mediaUrls = uploads.map((u) => u.mediaUrl);
+      const posterUrls = uploads.map((u) => u.posterUrl).filter(Boolean); // nur existierende Poster
+
+      const res = await fetch(`${API_URL}/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -105,17 +119,15 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         },
         body: JSON.stringify({
           content,
-          media: uploadedUrls,
+          media: mediaUrls,
+          posters: posterUrls.length > 0 ? posterUrls : undefined,
         }),
       });
 
-      const postData = await postRes.json();
+      const postData = await res.json();
 
-      if (!postRes.ok) {
-        console.error(
-          "Fehler beim Speichern des Posts:",
-          postData.message || postData
-        );
+      if (!res.ok) {
+        console.error("Error saving post:", postData.message || postData);
         return;
       }
 
@@ -124,7 +136,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
       setMediaFiles([]);
       onClose();
     } catch (err) {
-      console.error("Fehler beim Upload:", err);
+      console.error("Upload error:", err);
     } finally {
       setUploading(false);
     }

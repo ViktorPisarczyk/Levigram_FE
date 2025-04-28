@@ -10,33 +10,26 @@ interface Props {
 
 const MediaPreviewCarousel: React.FC<Props> = ({ mediaFiles, onRemove }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [objectUrls, setObjectUrls] = useState<string[]>([]);
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
-    slides: {
-      perView: 1,
-      spacing: 10,
-    },
-    slideChanged: (slider) => {
+    slides: { perView: 1, spacing: 10 },
+    slideChanged(slider) {
       setCurrentIndex(slider.track.details.rel);
     },
   });
 
-  const urls = useMemo(() => {
-    return mediaFiles.map((item) =>
-      typeof item === "string" ? item : URL.createObjectURL(item)
-    );
-  }, [mediaFiles]);
-
   useEffect(() => {
+    const urls = mediaFiles.map((file) =>
+      typeof file === "string" ? file : URL.createObjectURL(file)
+    );
+    setObjectUrls(urls);
+
     return () => {
-      mediaFiles.forEach((item) => {
-        if (item instanceof File) {
-          try {
-            URL.revokeObjectURL(URL.createObjectURL(item));
-          } catch (err) {
-            console.warn("Revoke failed", err);
-          }
+      urls.forEach((url) => {
+        if (url.startsWith("blob:")) {
+          URL.revokeObjectURL(url);
         }
       });
     };
@@ -45,7 +38,6 @@ const MediaPreviewCarousel: React.FC<Props> = ({ mediaFiles, onRemove }) => {
   useEffect(() => {
     if (instanceRef.current) {
       instanceRef.current.update();
-
       if (currentIndex >= mediaFiles.length) {
         const newIndex = Math.max(0, mediaFiles.length - 1);
         setCurrentIndex(newIndex);
@@ -54,18 +46,20 @@ const MediaPreviewCarousel: React.FC<Props> = ({ mediaFiles, onRemove }) => {
     }
   }, [mediaFiles.length, instanceRef, currentIndex]);
 
-  const isImage = (item: File | string) =>
-    typeof item === "string"
-      ? !item.match(/\.(mp4|mov|webm|ogg)$/i)
-      : item.type.startsWith("image");
+  const isImage = (url: string) => {
+    return !url.match(/\.(mp4|mov|webm|ogg)$/i);
+  };
 
-  if (!urls.length) return null;
+  if (!objectUrls.length) return null;
 
   return (
     <div className="media-carousel-preview">
-      <div ref={sliderRef} className="keen-slider" key={mediaFiles.length}>
-        {mediaFiles.map((file, index) => (
-          <div key={index} className="keen-slider__slide media-slide">
+      <div ref={sliderRef} className="keen-slider">
+        {objectUrls.map((url, index) => (
+          <div
+            key={`${url}-${index}`}
+            className="keen-slider__slide media-slide"
+          >
             <button
               type="button"
               className="remove-button"
@@ -73,18 +67,18 @@ const MediaPreviewCarousel: React.FC<Props> = ({ mediaFiles, onRemove }) => {
             >
               ✖
             </button>
-            {isImage(file) ? (
-              <img src={urls[index]} alt={`preview-${index}`} />
+            {isImage(url) ? (
+              <img src={url} alt={`preview-${index}`} />
             ) : (
-              <video controls src={urls[index]} />
+              <video controls src={url} preload="metadata" />
             )}
           </div>
         ))}
       </div>
 
-      {mediaFiles.length > 1 && (
+      {objectUrls.length > 1 && (
         <div className="dots">
-          {mediaFiles.map((_, idx) => (
+          {objectUrls.map((_, idx) => (
             <button
               key={idx}
               onClick={() => instanceRef.current?.moveToIdx(idx)}

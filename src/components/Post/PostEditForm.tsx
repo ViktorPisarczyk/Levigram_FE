@@ -1,14 +1,13 @@
 import React, { useState, useRef } from "react";
-
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { editPostAsync, Post, fetchCommentsByPostId } from "./postSlice";
-
 import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
-
 import heic2any from "heic2any";
 import "./PostEditForm.scss";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface PostEditFormProps {
   post: Post;
@@ -25,6 +24,45 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   useClickOutside(formRef, () => {
     if (!uploading) onCancel();
   });
+
+  const uploadMediaFiles = async (files: File[]) => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+    const uploads = await Promise.all(
+      files.map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", uploadPreset);
+        formData.append("folder", "uploads/posts");
+
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const data = await res.json();
+        if (!res.ok || !data.secure_url) {
+          throw new Error(data.message || "Cloudinary upload failed");
+        }
+
+        let posterUrl: string | undefined;
+        if (file.type.startsWith("video/")) {
+          posterUrl = data.secure_url.replace("/upload/", "/upload/so_1/");
+        }
+
+        return {
+          mediaUrl: data.secure_url,
+          posterUrl,
+        };
+      })
+    );
+
+    return uploads;
+  };
 
   const handleRemoveMedia = (index: number) => {
     setMediaFiles((prev) => prev.filter((_, i) => i !== index));
@@ -43,13 +81,11 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
           const converted = new File(
             [blob as BlobPart],
             file.name.replace(/\.heic$/, ".jpg"),
-            {
-              type: "image/jpeg",
-            }
+            { type: "image/jpeg" }
           );
           processedFiles.push(converted);
         } catch (err) {
-          console.error("HEIC-Konvertierung fehlgeschlagen", err);
+          console.error("HEIC conversion failed:", err);
         }
       } else {
         processedFiles.push(file);
@@ -65,39 +101,16 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
 
     try {
       const token = localStorage.getItem("token");
-      const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
-      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
       const existingUrls = mediaFiles.filter(
         (m) => typeof m === "string"
       ) as string[];
       const newFiles = mediaFiles.filter((m) => m instanceof File) as File[];
 
-      const uploadedUrls = await Promise.all(
-        newFiles.map(async (file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("upload_preset", uploadPreset);
-          formData.append("folder", "uploads/posts");
+      const uploads = await uploadMediaFiles(newFiles);
+      const newMediaUrls = uploads.map((u) => u.mediaUrl);
 
-          const res = await fetch(
-            `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-          const data = await res.json();
-          if (!res.ok || !data.secure_url) {
-            throw new Error(data.message || "Cloudinary Upload Fehler");
-          }
-
-          return data.secure_url;
-        })
-      );
-
-      const finalMedia = [...existingUrls, ...uploadedUrls];
+      const finalMedia = [...existingUrls, ...newMediaUrls];
 
       await dispatch(
         editPostAsync({
@@ -111,7 +124,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
 
       onCancel();
     } catch (err) {
-      console.error("Fehler beim Speichern:", err);
+      console.error("Error updating post:", err);
     } finally {
       setUploading(false);
     }

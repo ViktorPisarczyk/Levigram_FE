@@ -41,15 +41,17 @@ html,
 body {
   height: 100%;
   width: 100%;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
   overscroll-behavior: none;
   scroll-behavior: smooth;
   touch-action: manipulation;
-  background: var(--primary);
+  background-color: var(--primary);
   background-image: var(--background-image);
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-repeat: repeat;
+  background-size: auto;
+  background-position: top left;
   background-attachment: fixed;
   font-family: "Inter", sans-serif;
   -webkit-tap-highlight-color: transparent;
