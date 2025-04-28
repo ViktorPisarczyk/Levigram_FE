@@ -1,0 +1,52 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: var(--primary);
+  background-image: var(--background-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+:root {
+  --primary: #ffffff;
+  --secondary: #dfe7fd;
+  --tertiary: #2db0db;
+  --quaternary: #1ca841;
+  --quinary: #f76a3f;
+  --danger: #f8436a;
+  --text: black;
+  --textarea: #eef3ff;
+  --navigation: white;
+  --placeholder-text: #888;
+  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(170, 183, 196, 0.2);
+  --background-image: url("./assets/images/istockphoto-887138350-612x612.jpg");
+}
+
+[data-theme="dark"] {
+  --primary: #212830;
+  --secondary: #151c23;
+  --tertiary: #2db0db;
+  --quaternary: #1ca841;
+  --quinary: #f76a3f;
+  --danger: #f8436a;
+  --text: white;
+  --textarea: #303030;
+  --navigation: #212830;
+  --placeholder-text: #888;
+  --box-shadow: 0 0 10px rgba(200, 180, 255, 0.15),
+    0 0 18px rgba(200, 180, 255, 0.1);
+  --background-image: none;
+}
+
+button {
+  cursor: pointer;
+}

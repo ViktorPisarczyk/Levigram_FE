@@ -1,0 +1,129 @@
+.profile-edit-form {
+  position: fixed;
+  align-items: center;
+  bottom: 64px;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 100%;
+  max-width: 500px;
+  padding: 1rem;
+  background-color: var(--secondary);
+  box-shadow: var(--box-shadow);
+  border-radius: 0.5rem 0.5rem 0 0;
+  z-index: 1000;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+
+  .form-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: auto;
+    width: 300px;
+
+    .logout-button {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      svg {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .form-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    overflow-y: auto;
+
+    .profile-picture-preview img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--quinary);
+    }
+
+    .upload-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 6px 12px;
+      font-size: 14px;
+      width: 300px;
+      background-color: var(--quinary);
+      color: white;
+      border: none;
+      border-radius: 0.3rem;
+      cursor: pointer;
+
+      .icon {
+        font-size: 20px;
+      }
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    input[type="text"] {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid var(--tertiary);
+      border-radius: 0.3rem;
+      width: 100%;
+      max-width: 300px;
+      background-color: var(--textarea);
+      color: var(--text);
+
+      &:focus {
+        outline: none;
+        border: 2px solid var(--tertiary);
+        background-color: var(--textarea);
+      }
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px;
+
+      button {
+        flex: 1;
+        height: 40px;
+        font-size: 14px;
+        border: none;
+        border-radius: 0.3rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &.cancel-button {
+          background: var(--tertiary);
+          color: white;
+        }
+
+        &.submit-button {
+          background: var(--quaternary);
+          color: white;
+        }
+      }
+    }
+  }
+}
