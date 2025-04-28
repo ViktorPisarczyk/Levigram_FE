@@ -2,12 +2,12 @@ import React, { useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import "./PostCreateForm.scss";
-import { IoMdSend } from "react-icons/io";
 import { addPost } from "./postSlice";
 import heic2any from "heic2any";
 import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
-import { MdOutlineFileUpload, MdOutlineCancel } from "react-icons/md";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface PostCreateFormProps {
   onClose: () => void;
@@ -97,7 +97,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
 
       const uploadedUrls = await Promise.all(uploadPromises);
 
-      const postRes = await fetch("http://localhost:5001/posts", {
+      const postRes = await fetch("${API_URL}/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../redux/store";
 import defaultAvatar from "../../assets/images/defaultAvatar.png";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // ==== Interfaces ====
 
 export interface User {
@@ -70,7 +72,7 @@ export const fetchPostsAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`http://localhost:5001/posts?page=${page}`, {
+    const response = await fetch(`${API_URL}/posts?page=${page}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -95,7 +97,7 @@ export const addPostAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch("http://localhost:5001/posts", {
+    const response = await fetch("${API_URL}/posts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -126,7 +128,7 @@ export const editPostAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`http://localhost:5001/posts/${postId}`, {
+    const response = await fetch(`${API_URL}/posts/${postId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -157,7 +159,7 @@ export const deletePostAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`http://localhost:5001/posts/${postId}`, {
+    const response = await fetch(`${API_URL}/posts/${postId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -186,7 +188,7 @@ export const toggleLikeAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`http://localhost:5001/posts/${postId}/like`, {
+    const response = await fetch(`${API_URL}/posts/${postId}/like`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -213,7 +215,7 @@ export const addCommentAsync = createAsyncThunk<
     const token = localStorage.getItem("token");
     const { auth } = thunkAPI.getState();
 
-    const response = await fetch(`http://localhost:5001/comments`, {
+    const response = await fetch(`${API_URL}/comments`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -262,17 +264,14 @@ export const editCommentAsync = createAsyncThunk<
       const token = localStorage.getItem("token");
       const { auth } = thunkAPI.getState();
 
-      const response = await fetch(
-        `http://localhost:5001/comments/${commentId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ text: newText }),
-        }
-      );
+      const response = await fetch(`${API_URL}/comments/${commentId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: newText }),
+      });
 
       const data = await response.json();
 
@@ -312,15 +311,12 @@ export const deleteCommentAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `http://localhost:5001/comments/${commentId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await fetch(`${API_URL}/comments/${commentId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     const data = await response.json();
 
@@ -341,14 +337,11 @@ export const fetchCommentsByPostId = createAsyncThunk(
   async (postId: string, thunkAPI) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `http://localhost:5001/posts/${postId}/comments`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch(`${API_URL}/posts/${postId}/comments`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
       return { postId, comments: data.comments };
     } catch (err: any) {

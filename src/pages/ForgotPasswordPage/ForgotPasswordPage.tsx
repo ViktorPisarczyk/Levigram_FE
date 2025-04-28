@@ -10,6 +10,8 @@ const ForgotPasswordPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -21,7 +23,7 @@ const ForgotPasswordPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5001/users/reset-password", {
+      const res = await fetch("${API_URL}/users/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

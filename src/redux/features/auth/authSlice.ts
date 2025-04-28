@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { NavigateFunction } from "react-router-dom";
 import { RootState } from "../../store";
 
-const API_URL = "http://localhost:5001";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // ==== Types ====
 
@@ -163,7 +163,7 @@ export const updateProfileAsync = createAsyncThunk<
 
     if (!userId) return thunkAPI.rejectWithValue("Kein User ID");
 
-    const res = await fetch(`http://localhost:5001/users/${userId}`, {
+    const res = await fetch(`${API_URL}/users/${userId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

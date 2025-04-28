@@ -18,6 +18,8 @@ import {
 } from "../../redux/uiSlice";
 import SearchForm from "../../components/SearchForm/SearchForm";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -40,7 +42,7 @@ const Home: React.FC = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:5001/posts/search?query=${encodeURIComponent(query)}`,
+        `${API_URL}/posts/search?query=${encodeURIComponent(query)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
