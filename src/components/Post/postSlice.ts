@@ -24,11 +24,16 @@ export interface Comment {
   createdAt: string;
 }
 
+export interface MediaItem {
+  url: string;
+  poster?: string;
+}
+
 export interface Post {
   _id: string;
   author: User;
   content: string;
-  media: string[];
+  media: MediaItem[];
   likes: string[];
   comments: Comment[];
   createdAt: string;
@@ -58,14 +63,8 @@ const initialState: PostState = {
 
 // ==== Async Thunks ====
 
-// Fetch paginated posts
 export const fetchPostsAsync = createAsyncThunk<
-  {
-    posts: Post[];
-    hasMore: boolean;
-    currentPage: number;
-    totalPages: number;
-  },
+  { posts: Post[]; hasMore: boolean; currentPage: number; totalPages: number },
   number,
   { rejectValue: string }
 >("posts/fetchPosts", async (page = 1, thunkAPI) => {
@@ -73,9 +72,7 @@ export const fetchPostsAsync = createAsyncThunk<
     const token = localStorage.getItem("token");
 
     const response = await fetch(`${API_URL}/posts?page=${page}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!response.ok) {
@@ -91,13 +88,13 @@ export const fetchPostsAsync = createAsyncThunk<
 
 export const addPostAsync = createAsyncThunk<
   Post,
-  { content: string; media?: string[] },
+  { content: string; media?: MediaItem[] },
   { rejectValue: string }
 >("posts/addPostAsync", async ({ content, media }, thunkAPI) => {
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch("${API_URL}/posts", {
+    const response = await fetch(`${API_URL}/posts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -109,9 +106,7 @@ export const addPostAsync = createAsyncThunk<
     const data = await response.json();
 
     if (!response.ok) {
-      return thunkAPI.rejectWithValue(
-        data.message || "Fehler beim Erstellen des Posts"
-      );
+      return thunkAPI.rejectWithValue(data.message || "Error creating post");
     }
 
     return data as Post;
@@ -122,7 +117,7 @@ export const addPostAsync = createAsyncThunk<
 
 export const editPostAsync = createAsyncThunk<
   Post,
-  { postId: string; content: string; media?: string[] },
+  { postId: string; content: string; media?: MediaItem[] },
   { rejectValue: string }
 >("posts/editPostAsync", async ({ postId, content, media }, thunkAPI) => {
   try {
@@ -141,7 +136,7 @@ export const editPostAsync = createAsyncThunk<
 
     if (!response.ok) {
       return thunkAPI.rejectWithValue(
-        updatedPost.message || "Fehler beim Bearbeiten des Posts"
+        updatedPost.message || "Error updating post"
       );
     }
 
@@ -394,7 +389,7 @@ const postSlice = createSlice({
       })
       .addCase(fetchPostsAsync.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Fehler beim Laden der Posts.";
+        state.error = action.payload || "Error fetching posts.";
       })
       .addCase(addPostAsync.fulfilled, (state, action) => {
         state.posts.unshift(action.payload);
@@ -404,52 +399,6 @@ const postSlice = createSlice({
         const index = state.posts.findIndex((p) => p._id === updated._id);
         if (index !== -1) {
           state.posts[index] = updated;
-        }
-      })
-      .addCase(deletePostAsync.fulfilled, (state, action) => {
-        state.posts = state.posts.filter((p) => p._id !== action.payload);
-      })
-      .addCase(toggleLikeAsync.fulfilled, (state, action) => {
-        const { postId, userId } = action.payload;
-        const post = state.posts.find((p) => p._id === postId);
-        if (!post) return;
-
-        const alreadyLiked = post.likes.includes(userId);
-        post.likes = alreadyLiked
-          ? post.likes.filter((id) => id !== userId)
-          : [...post.likes, userId];
-      })
-      .addCase(addCommentAsync.fulfilled, (state, action) => {
-        const post = state.posts.find((p) => p._id === action.payload.postId);
-        if (post) {
-          post.comments.push(action.payload);
-        }
-      })
-      .addCase(editCommentAsync.fulfilled, (state, action) => {
-        const updatedComment = action.payload;
-        const post = state.posts.find((p) => p._id === updatedComment.postId);
-
-        if (post) {
-          const commentIndex = post.comments.findIndex(
-            (c) => c._id === updatedComment._id
-          );
-          if (commentIndex !== -1) {
-            post.comments[commentIndex] = updatedComment;
-          }
-        }
-      })
-      .addCase(deleteCommentAsync.fulfilled, (state, action) => {
-        const { postId, commentId } = action.payload;
-        const post = state.posts.find((p) => p._id === postId);
-        if (post) {
-          post.comments = post.comments.filter((c) => c._id !== commentId);
-        }
-      })
-      .addCase(fetchCommentsByPostId.fulfilled, (state, action) => {
-        const { postId, comments } = action.payload;
-        const post = state.posts.find((p) => p._id === postId);
-        if (post) {
-          post.comments = comments;
         }
       });
   },

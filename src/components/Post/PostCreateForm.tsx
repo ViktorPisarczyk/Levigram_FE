@@ -14,6 +14,12 @@ interface PostCreateFormProps {
   triggerRef?: React.RefObject<HTMLElement>;
 }
 
+interface MediaFile {
+  url: string;
+  poster?: string;
+  rawFile?: File; // für Upload (optional)
+}
+
 const PostCreateForm: React.FC<PostCreateFormProps> = ({
   onClose,
   triggerRef,
@@ -21,7 +27,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const [content, setContent] = useState("");
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +53,6 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         const data = await res.json();
 
         if (!res.ok || !data.secure_url) {
-          console.error("❌ Cloudinary Upload failed:", data);
           throw new Error(data.message || "Cloudinary upload error");
         }
 
@@ -57,8 +62,8 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         }
 
         return {
-          mediaUrl: data.secure_url,
-          posterUrl,
+          url: data.secure_url,
+          poster: posterUrl,
         };
       })
     );
@@ -70,7 +75,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     if (!e.target.files) return;
 
     const files = Array.from(e.target.files);
-    const processedFiles: File[] = [];
+    const processedFiles: MediaFile[] = [];
 
     for (const file of files) {
       if (file.type === "image/heic" || file.name.endsWith(".heic")) {
@@ -81,18 +86,15 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
             file.name.replace(/\.heic$/, ".jpg"),
             { type: "image/jpeg" }
           );
-          processedFiles.push(converted);
+          processedFiles.push({
+            url: URL.createObjectURL(converted),
+            rawFile: converted,
+          });
         } catch (err) {
-          console.error("HEIC conversion failed:", err);
+          console.error("HEIC conversion failed", err);
         }
       } else {
-        await new Promise<void>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve();
-          reader.onerror = () => resolve();
-          reader.readAsArrayBuffer(file);
-        });
-        processedFiles.push(file);
+        processedFiles.push({ url: URL.createObjectURL(file), rawFile: file });
       }
     }
 
@@ -106,10 +108,13 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     try {
       const token = localStorage.getItem("token");
 
-      const uploads = await uploadMediaFiles(mediaFiles);
+      const filesToUpload = mediaFiles
+        .map((m) => m.rawFile)
+        .filter(Boolean) as File[];
+      const uploads = await uploadMediaFiles(filesToUpload);
 
-      const mediaUrls = uploads.map((u) => u.mediaUrl);
-      const posterUrls = uploads.map((u) => u.posterUrl).filter(Boolean); // nur existierende Poster
+      const mediaUrls = uploads.map((u) => u.url);
+      const posterUrls = uploads.map((u) => u.poster).filter(Boolean);
 
       const res = await fetch(`${API_URL}/posts`, {
         method: "POST",
@@ -119,8 +124,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         },
         body: JSON.stringify({
           content,
-          media: mediaUrls,
-          posters: posterUrls.length > 0 ? posterUrls : undefined,
+          media: uploads, // wichtig: media = [{url, poster}]
         }),
       });
 
@@ -197,6 +201,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
           </button>
         </div>
       </div>
+
       {uploading && (
         <div className="uploading-overlay">
           <div className="spinner" />

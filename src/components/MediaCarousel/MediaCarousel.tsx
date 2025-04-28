@@ -3,12 +3,18 @@ import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import "./MediaCarousel.scss";
 
+interface MediaItem {
+  url: string;
+  poster?: string;
+}
+
 interface MediaCarouselProps {
-  media: string[];
+  media: MediaItem[];
 }
 
 const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
     mode: "snap",
@@ -21,17 +27,28 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     },
   });
 
+  if (!media.length) return null;
+
   return (
     <div className="media-carousel">
       <div ref={sliderRef} className="keen-slider">
         {media.map((item, index) => {
-          const isVideo = item.match(/\.(mp4|mov|webm|ogg)$/i);
+          const isVideo = item.url.match(/\.(mp4|mov|webm|ogg)$/i);
           return (
             <div className="keen-slider__slide media-slide" key={index}>
               {isVideo ? (
-                <video src={item} controls className="post-media" />
+                <video
+                  src={item.url}
+                  controls
+                  className="post-media"
+                  poster={item.poster}
+                />
               ) : (
-                <img src={item} alt={`media-${index}`} className="post-media" />
+                <img
+                  src={item.url}
+                  alt={`media-${index}`}
+                  className="post-media"
+                />
               )}
             </div>
           );

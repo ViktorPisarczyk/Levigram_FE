@@ -1,84 +1,70 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import "./MediaPreviewCarousel.scss";
 
+interface MediaFile {
+  url: string;
+  poster?: string;
+}
+
 interface Props {
-  mediaFiles: (File | string)[];
+  mediaFiles: MediaFile[];
   onRemove: (index: number) => void;
 }
 
 const MediaPreviewCarousel: React.FC<Props> = ({ mediaFiles, onRemove }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [objectUrls, setObjectUrls] = useState<string[]>([]);
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
-    slides: { perView: 1, spacing: 10 },
-    slideChanged(slider) {
+    slides: {
+      perView: 1,
+      spacing: 10,
+    },
+    slideChanged: (slider) => {
       setCurrentIndex(slider.track.details.rel);
     },
   });
 
-  useEffect(() => {
-    const urls = mediaFiles.map((file) =>
-      typeof file === "string" ? file : URL.createObjectURL(file)
-    );
-    setObjectUrls(urls);
-
-    return () => {
-      urls.forEach((url) => {
-        if (url.startsWith("blob:")) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, [mediaFiles]);
-
-  useEffect(() => {
-    if (instanceRef.current) {
-      instanceRef.current.update();
-      if (currentIndex >= mediaFiles.length) {
-        const newIndex = Math.max(0, mediaFiles.length - 1);
-        setCurrentIndex(newIndex);
-        instanceRef.current.moveToIdx(newIndex);
-      }
-    }
-  }, [mediaFiles.length, instanceRef, currentIndex]);
-
-  const isImage = (url: string) => {
-    return !url.match(/\.(mp4|mov|webm|ogg)$/i);
-  };
-
-  if (!objectUrls.length) return null;
+  if (!mediaFiles.length) return null;
 
   return (
     <div className="media-carousel-preview">
       <div ref={sliderRef} className="keen-slider">
-        {objectUrls.map((url, index) => (
-          <div
-            key={`${url}-${index}`}
-            className="keen-slider__slide media-slide"
-          >
-            <button
-              type="button"
-              className="remove-button"
-              onClick={() => onRemove(index)}
-            >
-              ✖
-            </button>
-            {isImage(url) ? (
-              <img src={url} alt={`preview-${index}`} />
-            ) : (
-              <video controls src={url} preload="metadata" />
-            )}
-          </div>
-        ))}
+        {mediaFiles.map((file, index) => {
+          const isVideo = file.url.match(/\.(mp4|mov|webm|ogg)$/i);
+          return (
+            <div key={index} className="keen-slider__slide media-slide">
+              <button
+                type="button"
+                className="remove-button"
+                onClick={() => onRemove(index)}
+              >
+                ✖
+              </button>
+              {isVideo ? (
+                <video
+                  src={file.url}
+                  controls
+                  poster={file.poster}
+                  className="preview-video"
+                />
+              ) : (
+                <img
+                  src={file.url}
+                  alt={`preview-${index}`}
+                  className="preview-image"
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {objectUrls.length > 1 && (
+      {mediaFiles.length > 1 && (
         <div className="dots">
-          {objectUrls.map((_, idx) => (
+          {mediaFiles.map((_, idx) => (
             <button
               key={idx}
               onClick={() => instanceRef.current?.moveToIdx(idx)}

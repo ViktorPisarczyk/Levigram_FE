@@ -1,13 +1,17 @@
 import React, { useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
-import { editPostAsync, Post, fetchCommentsByPostId } from "./postSlice";
+import { editPostAsync, fetchCommentsByPostId, Post } from "./postSlice";
 import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import heic2any from "heic2any";
 import "./PostEditForm.scss";
 
-const API_URL = import.meta.env.VITE_API_URL;
+interface MediaFile {
+  url: string;
+  poster?: string;
+  rawFile?: File;
+}
 
 interface PostEditFormProps {
   post: Post;
@@ -17,7 +21,14 @@ interface PostEditFormProps {
 const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [content, setContent] = useState(post.content);
-  const [mediaFiles, setMediaFiles] = useState<(string | File)[]>(post.media);
+
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>(
+    post.media.map((item) => ({
+      url: item.url,
+      poster: item.poster,
+    }))
+  );
+
   const [uploading, setUploading] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -55,8 +66,8 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
         }
 
         return {
-          mediaUrl: data.secure_url,
-          posterUrl,
+          url: data.secure_url,
+          poster: posterUrl,
         };
       })
     );
@@ -72,7 +83,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
     if (!e.target.files) return;
 
     const files = Array.from(e.target.files);
-    const processedFiles: File[] = [];
+    const processedFiles: MediaFile[] = [];
 
     for (const file of files) {
       if (file.type === "image/heic" || file.name.endsWith(".heic")) {
@@ -83,12 +94,15 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
             file.name.replace(/\.heic$/, ".jpg"),
             { type: "image/jpeg" }
           );
-          processedFiles.push(converted);
+          processedFiles.push({
+            url: URL.createObjectURL(converted),
+            rawFile: converted,
+          });
         } catch (err) {
-          console.error("HEIC conversion failed:", err);
+          console.error("HEIC conversion failed", err);
         }
       } else {
-        processedFiles.push(file);
+        processedFiles.push({ url: URL.createObjectURL(file), rawFile: file });
       }
     }
 
@@ -100,17 +114,20 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
     setUploading(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const filesToUpload = mediaFiles
+        .filter((m) => m.rawFile)
+        .map((m) => m.rawFile) as File[];
 
-      const existingUrls = mediaFiles.filter(
-        (m) => typeof m === "string"
-      ) as string[];
-      const newFiles = mediaFiles.filter((m) => m instanceof File) as File[];
+      const uploads = await uploadMediaFiles(filesToUpload);
 
-      const uploads = await uploadMediaFiles(newFiles);
-      const newMediaUrls = uploads.map((u) => u.mediaUrl);
+      const uploadedMedia: MediaFile[] = uploads.map((u) => ({
+        url: u.url,
+        poster: u.poster,
+      }));
 
-      const finalMedia = [...existingUrls, ...newMediaUrls];
+      const existingMedia: MediaFile[] = mediaFiles.filter((m) => !m.rawFile);
+
+      const finalMedia: MediaFile[] = [...existingMedia, ...uploadedMedia];
 
       await dispatch(
         editPostAsync({
@@ -121,7 +138,6 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
       ).unwrap();
 
       await dispatch(fetchCommentsByPostId(post._id));
-
       onCancel();
     } catch (err) {
       console.error("Error updating post:", err);
