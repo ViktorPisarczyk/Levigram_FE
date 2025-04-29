@@ -47,7 +47,7 @@ const MediaPreviewCarousel: React.FC<Props> = ({ mediaFiles, onRemove }) => {
                 <video
                   src={file.url}
                   controls
-                  poster={file.poster}
+                  poster={file.poster || undefined}
                   className="preview-video"
                 />
               ) : (

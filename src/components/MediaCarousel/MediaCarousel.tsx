@@ -41,7 +41,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                   src={item.url}
                   controls
                   className="post-media"
-                  poster={item.poster}
+                  poster={item.poster || undefined}
                 />
               ) : (
                 <img

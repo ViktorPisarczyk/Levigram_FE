@@ -17,7 +17,7 @@ interface PostCreateFormProps {
 interface MediaFile {
   url: string;
   poster?: string;
-  rawFile?: File; // für Upload (optional)
+  rawFile?: File;
 }
 
 const PostCreateForm: React.FC<PostCreateFormProps> = ({
@@ -106,15 +106,18 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
 
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
-
       const filesToUpload = mediaFiles
         .map((m) => m.rawFile)
         .filter(Boolean) as File[];
+
       const uploads = await uploadMediaFiles(filesToUpload);
 
-      const mediaUrls = uploads.map((u) => u.url);
-      const posterUrls = uploads.map((u) => u.poster).filter(Boolean);
+      setMediaFiles(
+        uploads.map((upload) => ({
+          url: upload.url,
+          poster: upload.poster,
+        }))
+      );
 
       const res = await fetch(`/posts`, {
         method: "POST",
@@ -137,8 +140,11 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
 
       dispatch(addPost(postData));
       setContent("");
-      setMediaFiles([]);
-      onClose();
+
+      setTimeout(() => {
+        setMediaFiles([]);
+        onClose();
+      }, 500);
     } catch (err) {
       console.error("Upload error:", err);
     } finally {
