@@ -33,7 +33,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     <div className="media-carousel">
       <div ref={sliderRef} className="keen-slider">
         {media.map((item, index) => {
-          const isVideo = item?.url?.match(/\.(mp4|mov|webm|ogg)$/i);
+          const isVideo = item.url.match(/\.(mp4|mov|webm|ogg)$/i);
           return (
             <div className="keen-slider__slide media-slide" key={index}>
               {isVideo ? (
@@ -41,7 +41,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                   src={item.url}
                   controls
                   className="post-media"
-                  poster={item.poster || undefined}
+                  {...(item.poster && !item.url.startsWith("blob:")
+                    ? { poster: item.poster }
+                    : {})}
                 />
               ) : (
                 <img

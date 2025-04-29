@@ -421,6 +421,13 @@ const postSlice = createSlice({
           state.posts[index] = updated;
         }
       })
+      .addCase(deletePostAsync.fulfilled, (state, action) => {
+        const deletedPostId = action.payload;
+        state.posts = state.posts.filter((post) => post._id !== deletedPostId);
+        state.searchResults = state.searchResults.filter(
+          (post) => post._id !== deletedPostId
+        );
+      })
       .addCase(addCommentAsync.fulfilled, (state, action) => {
         const { postId } = action.payload;
         const post = state.posts.find((p) => p._id === postId);

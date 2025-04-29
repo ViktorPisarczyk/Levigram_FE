@@ -2,8 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { NavigateFunction } from "react-router-dom";
 import { RootState } from "../../store";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 // ==== Types ====
 
 interface User {
@@ -33,6 +31,7 @@ interface AuthState {
   };
   loading: boolean;
   error: string | null;
+  status: "idle" | "loading" | "succeeded" | "failed";
 }
 
 // ==== Initial State ====
@@ -54,6 +53,7 @@ const initialState: AuthState = {
   },
   loading: false,
   error: null,
+  status: "idle",
 };
 
 // ==== Async Thunks ====
@@ -208,6 +208,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.status = "idle";
     },
   },
   extraReducers: (builder) => {
@@ -216,6 +217,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
+        state.status = "succeeded";
       })
       .addCase(login.rejected, (state, action) => {
         state.alert = {
@@ -223,6 +225,7 @@ const authSlice = createSlice({
           message: action.payload || "Login failed",
           isSuccess: false,
         };
+        state.status = "failed";
       })
       .addCase(signup.rejected, (state, action) => {
         state.alert = {
@@ -231,14 +234,19 @@ const authSlice = createSlice({
           isSuccess: false,
         };
       })
+      .addCase(checkAuth.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.status = "succeeded";
       })
       .addCase(checkAuth.rejected, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
+        state.status = "failed";
       })
       .addCase(updateProfileAsync.fulfilled, (state, action) => {
         state.user = action.payload.user;

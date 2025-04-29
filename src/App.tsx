@@ -16,7 +16,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, status } = useAppSelector((state) => state.auth);
+
+  if (status === "loading") {
+    return <div className="loading-screen">Loading authentication...</div>;
+  }
+
   return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
@@ -55,7 +60,6 @@ const App: React.FC = () => {
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
@@ -85,12 +89,8 @@ const App: React.FC = () => {
             padding: "10px 16px",
             fontSize: "14px",
           },
-          success: {
-            icon: "✅",
-          },
-          error: {
-            icon: "❌",
-          },
+          success: { icon: "✅" },
+          error: { icon: "❌" },
         }}
       />
 
