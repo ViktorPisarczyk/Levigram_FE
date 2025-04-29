@@ -45,8 +45,9 @@ const Home: React.FC = () => {
         `${API_URL}/posts/search?query=${encodeURIComponent(query)}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 

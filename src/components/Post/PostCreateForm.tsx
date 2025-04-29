@@ -120,11 +120,11 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({
           content,
-          media: uploads, // wichtig: media = [{url, poster}]
+          media: uploads,
         }),
       });
 

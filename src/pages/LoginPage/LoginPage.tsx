@@ -33,7 +33,8 @@ const Login: React.FC = () => {
         : await dispatch(signup({ formData, navigate }));
 
       if (signup.fulfilled.match(resultAction)) {
-        toast.success("Registration successful!");
+        toast.success("Registration successful! Please log in.");
+        dispatch(toggleLoginMode());
       } else if (signup.rejected.match(resultAction)) {
         toast.error("Registration failed. Please check your details.");
       }

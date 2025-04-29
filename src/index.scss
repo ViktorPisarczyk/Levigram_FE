@@ -55,11 +55,14 @@ body {
   background-attachment: fixed;
   font-family: "Inter", sans-serif;
   -webkit-tap-highlight-color: transparent;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 input,
-textarea {
-  font-size: 16px;
+textarea,
+select {
+  font-size: 16px !important;
+  -webkit-text-size-adjust: 100%;
 }
 
 button {

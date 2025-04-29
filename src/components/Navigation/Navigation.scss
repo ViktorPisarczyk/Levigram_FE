@@ -4,6 +4,7 @@
   width: 100%;
   max-width: 500px;
   background-color: var(--navigation);
+  padding-bottom: env(safe-area-inset-bottom);
   box-shadow: var(--box-shadow);
   display: flex;
   justify-content: space-around;

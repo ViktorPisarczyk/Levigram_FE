@@ -23,8 +23,8 @@ interface FormData {
 interface AuthState {
   isLogin: boolean;
   isAuthenticated: boolean;
-  token: string | null;
   user: User | null;
+  token: string | null;
   formData: FormData;
   alert: {
     show: boolean;
@@ -40,8 +40,8 @@ interface AuthState {
 const initialState: AuthState = {
   isLogin: true,
   isAuthenticated: false,
-  token: null,
   user: null,
+  token: null,
   formData: {
     email: "",
     password: "",
@@ -69,6 +69,7 @@ export const login = createAsyncThunk<
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({
         email: formData.email,
         password: formData.password,
@@ -80,8 +81,6 @@ export const login = createAsyncThunk<
     if (!response.ok) {
       return thunkAPI.rejectWithValue(data.message || "Login failed");
     }
-
-    localStorage.setItem("token", data.token);
 
     navigate("/home");
     return { user: data.user, token: data.token };
@@ -101,6 +100,7 @@ export const signup = createAsyncThunk<
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(formData),
     });
 
@@ -110,43 +110,32 @@ export const signup = createAsyncThunk<
       return thunkAPI.rejectWithValue(data.message || "Signup failed");
     }
 
-    localStorage.setItem("token", data.token);
-
     thunkAPI.dispatch(
       setAlert({ show: true, message: "Signup successful!", isSuccess: true })
     );
 
-    setTimeout(() => navigate("/login"), 1000);
+    navigate("/login");
   } catch (error: any) {
     return thunkAPI.rejectWithValue(error.message);
   }
 });
 
-export const loadUserFromLocalStorage = createAsyncThunk(
-  "auth/loadUser",
+export const checkAuth = createAsyncThunk<User, void, { rejectValue: string }>(
+  "auth/checkAuth",
   async (_, thunkAPI) => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      return thunkAPI.rejectWithValue("No token found");
-    }
-
     try {
-      const res = await fetch(`${API_URL}/users/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(`${API_URL}/users/me`, {
+        credentials: "include",
       });
 
-      if (!res.ok) {
-        throw new Error("Token invalid or expired");
+      if (!response.ok) {
+        return thunkAPI.rejectWithValue("Not authenticated");
       }
 
-      const data = await res.json();
-
-      return { user: data.user, token };
-    } catch (err: any) {
-      return thunkAPI.rejectWithValue(err.message);
+      const user = await response.json();
+      return user as User;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
@@ -157,25 +146,27 @@ export const updateProfileAsync = createAsyncThunk<
   { state: RootState; rejectValue: string }
 >("auth/updateProfile", async ({ username, profilePicture }, thunkAPI) => {
   try {
-    const token = localStorage.getItem("token");
     const state = thunkAPI.getState();
+    const token = state.auth.token;
     const userId = state.auth.user?._id;
 
-    if (!userId) return thunkAPI.rejectWithValue("Kein User ID");
+    if (!token || !userId) {
+      return thunkAPI.rejectWithValue("No authentication");
+    }
 
-    const res = await fetch(`${API_URL}/users/${userId}`, {
+    const response = await fetch(`${API_URL}/users/${userId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify({ username, profilePicture }),
     });
 
-    const data = await res.json();
+    const data = await response.json();
 
-    if (!res.ok) {
-      return thunkAPI.rejectWithValue(data.message || "Update fehlgeschlagen");
+    if (!response.ok) {
+      return thunkAPI.rejectWithValue(data.message || "Update failed");
     }
 
     return { user: data.user };
@@ -217,7 +208,6 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
@@ -226,43 +216,32 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        state.alert = { show: false, message: "", isSuccess: true };
       })
       .addCase(login.rejected, (state, action) => {
         state.alert = {
           show: true,
-          message: action.payload || "Login failed.",
+          message: action.payload || "Login failed",
           isSuccess: false,
         };
       })
       .addCase(signup.rejected, (state, action) => {
-        const message =
-          action.payload?.includes("E11000") ||
-          action.payload?.includes("duplicate")
-            ? "This email is already in use."
-            : action.payload || "Signup failed.";
         state.alert = {
           show: true,
-          message,
+          message: action.payload || "Signup failed",
           isSuccess: false,
         };
       })
-      .addCase(loadUserFromLocalStorage.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+      .addCase(checkAuth.fulfilled, (state, action) => {
+        state.user = action.payload;
         state.isAuthenticated = true;
       })
-      .addCase(updateProfileAsync.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(checkAuth.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
       })
       .addCase(updateProfileAsync.fulfilled, (state, action) => {
         state.user = action.payload.user;
-        state.loading = false;
-      })
-      .addCase(updateProfileAsync.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Etwas ist schiefgelaufen";
       });
   },
 });

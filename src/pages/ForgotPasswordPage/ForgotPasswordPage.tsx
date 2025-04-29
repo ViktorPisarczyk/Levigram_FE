@@ -23,11 +23,12 @@ const ForgotPasswordPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("${API_URL}/users/reset-password", {
+      const res = await fetch(`${API_URL}/users/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ email, newPassword }),
       });
 

@@ -2,7 +2,7 @@ import React, { ReactNode, useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import { useAppSelector, useAppDispatch } from "./redux/hooks";
-import { loadUserFromLocalStorage } from "./redux/features/auth/authSlice";
+import { checkAuth } from "./redux/features/auth/authSlice";
 import { setDarkMode } from "./redux/features/theme/themeSlice";
 
 import { Toaster } from "react-hot-toast";
@@ -16,8 +16,8 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const token = localStorage.getItem("token");
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
 const App: React.FC = () => {
@@ -40,7 +40,7 @@ const App: React.FC = () => {
       dispatch(setDarkMode(prefersDark));
     }
 
-    dispatch(loadUserFromLocalStorage());
+    dispatch(checkAuth());
   }, [dispatch]);
 
   useEffect(() => {

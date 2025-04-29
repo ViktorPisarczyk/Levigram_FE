@@ -158,7 +158,7 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
 
   return (
     <div className="comments-list">
-      {comments.length > 0 ? (
+      {comments.length > 0 &&
         comments
           .slice()
           .reverse()
@@ -182,7 +182,6 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
                       src={displayProfilePicture}
                       alt="profile"
                     />
-
                     <div className="comment-author-meta">
                       <strong>{displayUsername}</strong>
                       <small>{formatDate(comment.createdAt)}</small>
@@ -248,10 +247,7 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
                 </div>
               </div>
             );
-          })
-      ) : (
-        <p className="no-comments">No comments yet.</p>
-      )}
+          })}
 
       {showConfirmDelete && commentToDeleteId && (
         <ConfirmModal
@@ -262,10 +258,7 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
           }}
           onConfirm={() => {
             dispatch(
-              deleteCommentAsync({
-                postId,
-                commentId: commentToDeleteId,
-              })
+              deleteCommentAsync({ postId, commentId: commentToDeleteId })
             );
             setShowConfirmDelete(false);
             setCommentToDeleteId(null);

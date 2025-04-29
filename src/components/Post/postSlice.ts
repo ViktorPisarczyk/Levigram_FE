@@ -72,7 +72,10 @@ export const fetchPostsAsync = createAsyncThunk<
     const token = localStorage.getItem("token");
 
     const response = await fetch(`${API_URL}/posts?page=${page}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -110,8 +113,8 @@ export const addPostAsync = createAsyncThunk<
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify({ content, media }),
     });
 
@@ -139,8 +142,8 @@ export const editPostAsync = createAsyncThunk<
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify({ content, media }),
     });
 
@@ -169,8 +172,9 @@ export const deletePostAsync = createAsyncThunk<
     const response = await fetch(`${API_URL}/posts/${postId}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -198,8 +202,9 @@ export const toggleLikeAsync = createAsyncThunk<
     const response = await fetch(`${API_URL}/posts/${postId}/like`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -226,8 +231,8 @@ export const addCommentAsync = createAsyncThunk<
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify({
         text,
         post: postId,
@@ -275,8 +280,8 @@ export const editCommentAsync = createAsyncThunk<
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ text: newText }),
       });
 
@@ -321,8 +326,9 @@ export const deleteCommentAsync = createAsyncThunk<
     const response = await fetch(`${API_URL}/comments/${commentId}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
+      credentials: "include",
     });
 
     const data = await response.json();
@@ -346,8 +352,9 @@ export const fetchCommentsByPostId = createAsyncThunk(
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/posts/${postId}/comments`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
+        credentials: "include",
       });
       const data = await res.json();
       return { postId, comments: data.comments };
@@ -412,6 +419,51 @@ const postSlice = createSlice({
         if (index !== -1) {
           state.posts[index] = updated;
         }
+      })
+      .addCase(addCommentAsync.fulfilled, (state, action) => {
+        const { postId } = action.payload;
+        const post = state.posts.find((p) => p._id === postId);
+        if (post) {
+          post.comments.push(action.payload);
+        }
+      })
+      .addCase(editCommentAsync.fulfilled, (state, action) => {
+        const updatedComment = action.payload;
+        const post = state.posts.find((p) => p._id === updatedComment.postId);
+        if (post) {
+          const commentIndex = post.comments.findIndex(
+            (c) => c._id === updatedComment._id
+          );
+          if (commentIndex !== -1) {
+            post.comments[commentIndex] = updatedComment;
+          }
+        }
+      })
+      .addCase(deleteCommentAsync.fulfilled, (state, action) => {
+        const { postId, commentId } = action.payload;
+        const post = state.posts.find((p) => p._id === postId);
+        if (post) {
+          post.comments = post.comments.filter((c) => c._id !== commentId);
+        }
+      })
+      .addCase(toggleLikeAsync.fulfilled, (state, action) => {
+        const { postId, userId } = action.payload;
+
+        const toggleLikeInPost = (post: Post | undefined) => {
+          if (!post) return;
+          const index = post.likes.indexOf(userId);
+          if (index > -1) {
+            post.likes.splice(index, 1);
+          } else {
+            post.likes.push(userId);
+          }
+        };
+
+        const post = state.posts.find((p) => p._id === postId);
+        toggleLikeInPost(post);
+
+        const searchPost = state.searchResults.find((p) => p._id === postId);
+        toggleLikeInPost(searchPost);
       });
   },
 });
