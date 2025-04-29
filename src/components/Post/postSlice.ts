@@ -71,7 +71,7 @@ export const fetchPostsAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${API_URL}/posts?page=${page}`, {
+    const response = await fetch(`/posts?page=${page}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -109,7 +109,7 @@ export const addPostAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${API_URL}/posts`, {
+    const response = await fetch(`/posts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -138,7 +138,7 @@ export const editPostAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${API_URL}/posts/${postId}`, {
+    const response = await fetch(`/posts/${postId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -169,7 +169,7 @@ export const deletePostAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${API_URL}/posts/${postId}`, {
+    const response = await fetch(`/posts/${postId}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -199,7 +199,7 @@ export const toggleLikeAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${API_URL}/posts/${postId}/like`, {
+    const response = await fetch(`/posts/${postId}/like`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -227,7 +227,7 @@ export const addCommentAsync = createAsyncThunk<
     const token = localStorage.getItem("token");
     const { auth } = thunkAPI.getState();
 
-    const response = await fetch(`${API_URL}/comments`, {
+    const response = await fetch(`/comments`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -276,7 +276,7 @@ export const editCommentAsync = createAsyncThunk<
       const token = localStorage.getItem("token");
       const { auth } = thunkAPI.getState();
 
-      const response = await fetch(`${API_URL}/comments/${commentId}`, {
+      const response = await fetch(`/comments/${commentId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -323,7 +323,7 @@ export const deleteCommentAsync = createAsyncThunk<
   try {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${API_URL}/comments/${commentId}`, {
+    const response = await fetch(`/comments/${commentId}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -350,7 +350,7 @@ export const fetchCommentsByPostId = createAsyncThunk(
   async (postId: string, thunkAPI) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/posts/${postId}/comments`, {
+      const res = await fetch(`/posts/${postId}/comments`, {
         headers: {
           "Content-Type": "application/json",
         },

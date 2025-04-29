@@ -116,7 +116,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
       const mediaUrls = uploads.map((u) => u.url);
       const posterUrls = uploads.map((u) => u.poster).filter(Boolean);
 
-      const res = await fetch(`${API_URL}/posts`, {
+      const res = await fetch(`/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

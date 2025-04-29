@@ -42,7 +42,7 @@ const Home: React.FC = () => {
 
     try {
       const res = await fetch(
-        `${API_URL}/posts/search?query=${encodeURIComponent(query)}`,
+        `/posts/search?query=${encodeURIComponent(query)}`,
         {
           headers: {
             "Content-Type": "application/json",

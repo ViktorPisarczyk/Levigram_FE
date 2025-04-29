@@ -64,7 +64,7 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >("auth/login", async ({ formData, navigate }, thunkAPI) => {
   try {
-    const response = await fetch(`${API_URL}/users/login`, {
+    const response = await fetch(`/users/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +95,7 @@ export const signup = createAsyncThunk<
   { rejectValue: string }
 >("auth/signup", async ({ formData, navigate }, thunkAPI) => {
   try {
-    const response = await fetch(`${API_URL}/users/signup`, {
+    const response = await fetch(`/users/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -124,7 +124,7 @@ export const checkAuth = createAsyncThunk<User, void, { rejectValue: string }>(
   "auth/checkAuth",
   async (_, thunkAPI) => {
     try {
-      const response = await fetch(`${API_URL}/users/me`, {
+      const response = await fetch(`/users/me`, {
         credentials: "include",
       });
 
@@ -154,7 +154,7 @@ export const updateProfileAsync = createAsyncThunk<
       return thunkAPI.rejectWithValue("No authentication");
     }
 
-    const response = await fetch(`${API_URL}/users/${userId}`, {
+    const response = await fetch(`/users/${userId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
