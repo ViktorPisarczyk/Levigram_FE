@@ -407,6 +407,7 @@ const postSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchPostsAsync.rejected, (state, action) => {
+        console.log("FETCH POSTS ERROR:", action.payload);
         state.loading = false;
         state.error = action.payload || "Error fetching posts.";
       })

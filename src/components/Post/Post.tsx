@@ -294,6 +294,14 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
     dispatch(toggleLikeAsync({ postId: post._id, userId: user._id }));
   };
 
+  const { error } = useSelector((state: RootState) => state.posts);
+
+  if (error) {
+    return (
+      <div className="post-container error">Error loading post: {error}</div>
+    );
+  }
+
   if (!post) return <div className="post-container">Post not found.</div>;
 
   const isOwnPost = post.author._id === user?._id;
