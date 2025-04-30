@@ -390,6 +390,13 @@ const postSlice = createSlice({
       state.searchResults = [];
       state.searchActive = false;
     },
+    resetPosts(state) {
+      state.posts = [];
+      state.currentPage = 1;
+      state.hasMore = true;
+      state.searchResults = [];
+      state.searchActive = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -476,8 +483,13 @@ const postSlice = createSlice({
   },
 });
 
-export const { addPost, replacePost, setSearchResults, clearSearchResults } =
-  postSlice.actions;
+export const {
+  addPost,
+  replacePost,
+  setSearchResults,
+  clearSearchResults,
+  resetPosts,
+} = postSlice.actions;
 
 // ==== Selectors ====
 

@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useCallback } from "react";
-import PullToRefresh from "react-pull-to-refresh";
+import React, { useEffect, useRef, useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import {
   fetchPostsAsync,
   setSearchResults,
   clearSearchResults,
+  resetPosts,
 } from "../../components/Post/postSlice";
 import PostComponent from "../../components/Post/Post";
 import "./HomePage.scss";
@@ -21,50 +21,44 @@ import SearchForm from "../../components/SearchForm/SearchForm";
 
 const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-
   const { posts, hasMore, currentPage, loading, searchResults, searchActive } =
     useSelector((state: RootState) => state.posts);
-
   const { isPostFormOpen, isProfileEditOpen, isSearchFormOpen } = useSelector(
     (state: RootState) => state.ui
   );
 
-  const observer = useRef<IntersectionObserver | null>(null);
-  const postButtonRef = useRef<HTMLButtonElement>(null);
-  const profileButtonRef = useRef<HTMLButtonElement>(null);
-
   const isSearching = Array.isArray(searchResults) && searchResults.length > 0;
   const currentList = isSearching ? searchResults : posts;
 
-  const handleSearch = async (query: string) => {
-    try {
-      const res = await fetch(
-        `/posts/search?query=${encodeURIComponent(query)}`,
-        {
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
-      const data = await res.json();
-      if (res.ok) {
-        const sortedPosts = data.sort(
-          (a: any, b: any) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        dispatch(setSearchResults(sortedPosts));
-      } else {
-        console.error(data.message);
-      }
-    } catch (error) {
-      console.error("Fehler beim Suchen:", error);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const scrollTopRef = useRef<HTMLDivElement>(null);
+  const postButtonRef = useRef<HTMLButtonElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+
+  const [startY, setStartY] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0) {
+      setStartY(e.touches[0].clientY);
     }
   };
 
-  useEffect(() => {
-    if (currentPage === 1 && posts.length === 0 && !loading) {
-      dispatch(fetchPostsAsync(1));
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (startY === null) return;
+    const endY = e.changedTouches[0].clientY;
+    const distance = endY - startY;
+
+    if (distance > 60 && !loading) {
+      setIsRefreshing(true);
+      dispatch(resetPosts());
+      dispatch(fetchPostsAsync(1)).finally(() => {
+        setTimeout(() => setIsRefreshing(false), 500);
+      });
     }
-  }, [dispatch, posts.length, currentPage, loading]);
+
+    setStartY(null);
+  };
 
   const handleObserver = useCallback(
     (node: HTMLDivElement | null) => {
@@ -82,48 +76,76 @@ const Home: React.FC = () => {
     [loading, hasMore, dispatch, currentPage, searchActive]
   );
 
-  const scrollTopRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (currentPage === 1 && posts.length === 0 && !loading) {
+      dispatch(fetchPostsAsync(1));
+    }
+  }, [dispatch, posts.length, currentPage, loading]);
+
+  const handleSearch = async (query: string) => {
+    try {
+      const res = await fetch(
+        `/posts/search?query=${encodeURIComponent(query)}`,
+        {
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        const sorted = data.sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        dispatch(setSearchResults(sorted));
+      } else {
+        console.error(data.message);
+      }
+    } catch (err) {
+      console.error("Fehler beim Suchen:", err);
+    }
+  };
 
   const handleHomeClick = () => {
     dispatch(clearSearchResults());
     scrollTopRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleRefresh = async () => {
-    await dispatch(fetchPostsAsync(1));
-  };
-
   return (
-    <div className="home-page">
+    <div
+      className="home-page"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <div ref={scrollTopRef}></div>
+
+      {isRefreshing && (
+        <div className="refresh-indicator">
+          <div className="spinner" />
+        </div>
+      )}
+
       <div className="logo"></div>
 
-      <PullToRefresh
-        onRefresh={handleRefresh}
-        className="pull-container"
-        style={{ touchAction: "pan-y" }} // für Safari
-      >
-        <div className="refresh-hint">⬇️ Zieh nach unten zum Aktualisieren</div>
+      <div className="post-feed">
+        {currentList.map((post, index) => {
+          const isLast = index === currentList.length - 1;
+          return (
+            <div
+              key={post._id}
+              ref={isLast && !searchActive ? handleObserver : null}
+            >
+              <PostComponent postId={post._id} />
+            </div>
+          );
+        })}
 
-        <div className="post-feed">
-          {currentList.map((post, index) => {
-            const isLast = index === currentList.length - 1;
-            return (
-              <div
-                key={post._id}
-                ref={isLast && !searchActive ? handleObserver : null}
-              >
-                <PostComponent postId={post._id} />
-              </div>
-            );
-          })}
-
-          {loading && !searchActive && <p>Loading posts...</p>}
-          {!loading && searchActive && currentList.length === 0 && (
-            <p>No posts found for your search.</p>
-          )}
-        </div>
-      </PullToRefresh>
+        {loading && !searchActive && <p>Loading posts...</p>}
+        {!loading && searchActive && currentList.length === 0 && (
+          <p>No posts found for your search.</p>
+        )}
+      </div>
 
       <Navigation
         onHomeClick={handleHomeClick}
@@ -162,11 +184,7 @@ const Home: React.FC = () => {
         <>
           <div className="blur-overlay"></div>
           <SearchForm
-            onClose={() => {
-              if (isSearchFormOpen) {
-                dispatch(toggleSearchForm());
-              }
-            }}
+            onClose={() => dispatch(toggleSearchForm())}
             onSearch={handleSearch}
           />
         </>
