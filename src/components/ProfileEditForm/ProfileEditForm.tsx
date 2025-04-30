@@ -14,6 +14,8 @@ import defaultAvatar from "../../assets/images/defaultAvatar.png";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import "./ProfileEditForm.scss";
 
+import { toast } from "react-hot-toast";
+
 interface ProfileEditFormProps {
   onClose: () => void;
   triggerRef?: React.RefObject<HTMLElement | null>;
@@ -106,10 +108,12 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       );
 
       if (updateProfileAsync.fulfilled.match(result)) {
+        toast.success("Profil erfolgreich aktualisiert!");
         onClose();
       }
     } catch (err) {
       console.error("Fehler beim Speichern:", err);
+      toast.error("Profil konnte nicht gespeichert werden.");
     } finally {
       setUploading(false);
     }

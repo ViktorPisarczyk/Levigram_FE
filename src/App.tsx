@@ -1,10 +1,8 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-
 import { useAppSelector, useAppDispatch } from "./redux/hooks";
-import { checkAuth } from "./redux/features/auth/authSlice";
+import { checkAuthAsync } from "./redux/features/auth/authSlice";
 import { setDarkMode } from "./redux/features/theme/themeSlice";
-
 import { Toaster } from "react-hot-toast";
 
 import Login from "./pages/LoginPage/LoginPage";
@@ -27,15 +25,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
-  const darkMode = useAppSelector((state) => state.theme.darkMode);
   const location = useLocation();
+
+  const { darkMode } = useAppSelector((state) => state.theme);
+  const { user, isAuthenticated, status } = useAppSelector(
+    (state) => state.auth
+  );
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
 
   useEffect(() => {
-    const storedDarkMode = localStorage.getItem("darkMode");
+    dispatch(checkAuthAsync());
 
+    const storedDarkMode = localStorage.getItem("darkMode");
     if (storedDarkMode !== null) {
       dispatch(setDarkMode(JSON.parse(storedDarkMode)));
     } else {
@@ -44,8 +47,6 @@ const App: React.FC = () => {
       ).matches;
       dispatch(setDarkMode(prefersDark));
     }
-
-    dispatch(checkAuth());
   }, [dispatch]);
 
   useEffect(() => {
@@ -67,15 +68,17 @@ const App: React.FC = () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then((choiceResult: any) => {
-      if (choiceResult.outcome === "accepted") {
-        console.log("User accepted the install prompt");
-      } else {
-        console.log("User dismissed the install prompt");
-      }
       setDeferredPrompt(null);
       setShowInstallButton(false);
     });
   };
+
+  // ✅ Debug logging
+  useEffect(() => {
+    console.log("🔐 Auth status:", status);
+    console.log("👤 User:", user);
+    console.log("✅ isAuthenticated:", isAuthenticated);
+  }, [status, user, isAuthenticated]);
 
   return (
     <>
@@ -116,7 +119,18 @@ const App: React.FC = () => {
       )}
 
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            status === "loading" ? (
+              <div className="loading-screen">Loading…</div>
+            ) : isAuthenticated ? (
+              <Navigate to="/home" replace />
+            ) : (
+              <Login />
+            )
+          }
+        />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route
           path="/home"
@@ -126,7 +140,7 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

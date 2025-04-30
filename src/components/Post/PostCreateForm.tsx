@@ -7,8 +7,6 @@ import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import "./PostCreateForm.scss";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 interface PostCreateFormProps {
   onClose: () => void;
   triggerRef?: React.RefObject<HTMLElement>;
@@ -31,12 +29,84 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
-  const uploadMediaFiles = async (files: File[]) => {
+  useClickOutside(
+    formRef,
+    () => {
+      if (!uploading) onClose();
+    },
+    triggerRef
+  );
+
+  const generatePoster = (url: string): Promise<string | undefined> => {
+    return new Promise((resolve) => {
+      const video = document.createElement("video");
+      video.src = url;
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = "auto";
+
+      video.addEventListener("canplay", () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL("image/jpeg");
+            resolve(dataURL);
+          } else {
+            console.warn("⚠️ Kein 2D-Kontext");
+            resolve(undefined);
+          }
+        } catch (err) {
+          console.error("❌ Fehler beim Zeichnen des Posters", err);
+          resolve(undefined);
+        }
+      });
+
+      video.addEventListener("error", () => {
+        console.error("❌ Fehler beim Laden des Videos für Poster", url);
+        resolve(undefined);
+      });
+
+      video.load();
+    });
+  };
+
+  const uploadPosterImage = async (dataUrl: string): Promise<string> => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+    const blob = await (await fetch(dataUrl)).blob();
+
+    const formData = new FormData();
+    formData.append("file", blob);
+    formData.append("upload_preset", uploadPreset);
+    formData.append("folder", "uploads/posts/posters");
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok || !data.secure_url)
+      throw new Error(data.message || "Poster upload failed");
+
+    return data.secure_url;
+  };
+
+  const uploadMediaFiles = async (files: MediaFile[]) => {
     const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
     const uploads = await Promise.all(
-      files.map(async (file) => {
+      files.map(async (media) => {
+        const file = media.rawFile!;
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", uploadPreset);
@@ -51,20 +121,19 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         );
 
         const data = await res.json();
+        if (!res.ok || !data.secure_url)
+          throw new Error(data.message || "Upload failed");
 
-        if (!res.ok || !data.secure_url) {
-          throw new Error(data.message || "Cloudinary upload error");
+        let finalPoster = media.poster;
+        if (finalPoster?.startsWith("data:")) {
+          try {
+            finalPoster = await uploadPosterImage(finalPoster);
+          } catch (err) {
+            console.warn("Poster upload failed:", err);
+          }
         }
 
-        let posterUrl: string | undefined;
-        if (file.type.startsWith("video/")) {
-          posterUrl = data.secure_url.replace("/upload/", "/upload/so_1/");
-        }
-
-        return {
-          url: data.secure_url,
-          poster: posterUrl,
-        };
+        return { url: data.secure_url, poster: finalPoster };
       })
     );
 
@@ -72,9 +141,13 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   };
 
   const handleMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
+    if (!e.target.files) {
+      console.warn("🚫 No files found");
+      return;
+    }
 
     const files = Array.from(e.target.files);
+
     const processedFiles: MediaFile[] = [];
 
     for (const file of files) {
@@ -84,7 +157,9 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
           const converted = new File(
             [blob as BlobPart],
             file.name.replace(/\.heic$/, ".jpg"),
-            { type: "image/jpeg" }
+            {
+              type: "image/jpeg",
+            }
           );
           processedFiles.push({
             url: URL.createObjectURL(converted),
@@ -94,7 +169,18 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
           console.error("HEIC conversion failed", err);
         }
       } else {
-        processedFiles.push({ url: URL.createObjectURL(file), rawFile: file });
+        const url = URL.createObjectURL(file);
+        let poster: string | undefined;
+
+        if (file.type.startsWith("video/")) {
+          try {
+            poster = await generatePoster(url);
+          } catch (err) {
+            console.error("Poster generation failed:", err);
+          }
+        }
+
+        processedFiles.push({ url, rawFile: file, poster });
       }
     }
 
@@ -106,18 +192,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
 
     setUploading(true);
     try {
-      const filesToUpload = mediaFiles
-        .map((m) => m.rawFile)
-        .filter(Boolean) as File[];
-
-      const uploads = await uploadMediaFiles(filesToUpload);
-
-      setMediaFiles(
-        uploads.map((upload) => ({
-          url: upload.url,
-          poster: upload.poster,
-        }))
-      );
+      const uploads = await uploadMediaFiles(mediaFiles);
 
       const res = await fetch(`/posts`, {
         method: "POST",
@@ -125,14 +200,10 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          content,
-          media: uploads,
-        }),
+        body: JSON.stringify({ content, media: uploads }),
       });
 
       const postData = await res.json();
-
       if (!res.ok) {
         console.error("Error saving post:", postData.message || postData);
         return;
@@ -140,7 +211,6 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
 
       dispatch(addPost(postData));
       setContent("");
-
       setTimeout(() => {
         setMediaFiles([]);
         onClose();
@@ -152,14 +222,6 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     }
   };
 
-  useClickOutside(
-    formRef,
-    () => {
-      if (!uploading) onClose();
-    },
-    triggerRef
-  );
-
   return (
     <div ref={formRef} className="post-create-form">
       <div className="form-content">
@@ -167,16 +229,31 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
           placeholder="Please add a text..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-        ></textarea>
+        />
 
-        <div className="media-preview-wrapper">
-          <MediaPreviewCarousel
-            mediaFiles={mediaFiles}
-            onRemove={(index) =>
-              setMediaFiles((prev) => prev.filter((_, i) => i !== index))
-            }
-          />
-        </div>
+        {mediaFiles.length > 0 && (
+          <div className="media-preview-wrapper">
+            <MediaPreviewCarousel
+              mediaFiles={mediaFiles}
+              onRemove={(index) => {
+                setMediaFiles((prev) => {
+                  const updated = prev.filter((_, i) => i !== index);
+                  if (index === mediaFiles.length - 1 && updated.length > 0) {
+                    setTimeout(() => {
+                      const slider = document.querySelector(".keen-slider");
+                      if (slider) {
+                        (slider as any).keenSlider?.moveToIdx(
+                          updated.length - 1
+                        );
+                      }
+                    }, 0);
+                  }
+                  return updated;
+                });
+              }}
+            />
+          </div>
+        )}
 
         <label htmlFor="media-upload" className="upload-button">
           Upload media files
@@ -211,7 +288,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
       {uploading && (
         <div className="uploading-overlay">
           <div className="spinner" />
-          <p className="loading-text">Post is loading...</p>
+          <p className="loading-text">Post is loading…</p>
         </div>
       )}
     </div>

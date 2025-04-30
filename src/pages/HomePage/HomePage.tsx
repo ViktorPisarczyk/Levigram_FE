@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from "react";
+import PullToRefresh from "react-pull-to-refresh";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import {
@@ -18,8 +19,6 @@ import {
 } from "../../redux/uiSlice";
 import SearchForm from "../../components/SearchForm/SearchForm";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -38,21 +37,15 @@ const Home: React.FC = () => {
   const currentList = isSearching ? searchResults : posts;
 
   const handleSearch = async (query: string) => {
-    const token = localStorage.getItem("token");
-
     try {
       const res = await fetch(
         `/posts/search?query=${encodeURIComponent(query)}`,
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           credentials: "include",
         }
       );
-
       const data = await res.json();
-
       if (res.ok) {
         const sortedPosts = data.sort(
           (a: any, b: any) =>
@@ -76,7 +69,6 @@ const Home: React.FC = () => {
   const handleObserver = useCallback(
     (node: HTMLDivElement | null) => {
       if (loading || searchActive) return;
-
       if (observer.current) observer.current.disconnect();
 
       observer.current = new IntersectionObserver((entries) => {
@@ -90,34 +82,48 @@ const Home: React.FC = () => {
     [loading, hasMore, dispatch, currentPage, searchActive]
   );
 
+  const scrollTopRef = useRef<HTMLDivElement>(null);
+
   const handleHomeClick = () => {
     dispatch(clearSearchResults());
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollTopRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleRefresh = async () => {
+    await dispatch(fetchPostsAsync(1));
   };
 
   return (
     <div className="home-page">
+      <div ref={scrollTopRef}></div>
       <div className="logo"></div>
 
-      <div className="post-feed">
-        {currentList.map((post, index) => {
-          const isLast = index === currentList.length - 1;
-          return (
-            <div
-              key={post._id}
-              ref={isLast && !searchActive ? handleObserver : null}
-            >
-              <PostComponent postId={post._id} />
-            </div>
-          );
-        })}
+      <PullToRefresh
+        onRefresh={handleRefresh}
+        className="pull-container"
+        style={{ touchAction: "pan-y" }} // für Safari
+      >
+        <div className="refresh-hint">⬇️ Zieh nach unten zum Aktualisieren</div>
 
-        {loading && !searchActive && <p>Loading posts...</p>}
+        <div className="post-feed">
+          {currentList.map((post, index) => {
+            const isLast = index === currentList.length - 1;
+            return (
+              <div
+                key={post._id}
+                ref={isLast && !searchActive ? handleObserver : null}
+              >
+                <PostComponent postId={post._id} />
+              </div>
+            );
+          })}
 
-        {!loading && searchActive && currentList.length === 0 && (
-          <p>No posts found for your search.</p>
-        )}
-      </div>
+          {loading && !searchActive && <p>Loading posts...</p>}
+          {!loading && searchActive && currentList.length === 0 && (
+            <p>No posts found for your search.</p>
+          )}
+        </div>
+      </PullToRefresh>
 
       <Navigation
         onHomeClick={handleHomeClick}

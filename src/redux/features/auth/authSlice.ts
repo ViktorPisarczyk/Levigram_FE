@@ -120,25 +120,24 @@ export const signup = createAsyncThunk<
   }
 });
 
-export const checkAuth = createAsyncThunk<User, void, { rejectValue: string }>(
-  "auth/checkAuth",
-  async (_, thunkAPI) => {
-    try {
-      const response = await fetch(`/users/me`, {
-        credentials: "include",
-      });
+export const checkAuthAsync = createAsyncThunk<
+  User,
+  void,
+  { state: RootState; rejectValue: string }
+>("auth/checkAuth", async (_, thunkAPI) => {
+  try {
+    const res = await fetch("/users/me", {
+      method: "GET",
+      credentials: "include",
+    });
 
-      if (!response.ok) {
-        return thunkAPI.rejectWithValue("Not authenticated");
-      }
-
-      const user = await response.json();
-      return user as User;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.message);
-    }
+    if (!res.ok) throw new Error("Not authenticated");
+    const user = await res.json();
+    return user;
+  } catch (err) {
+    return thunkAPI.rejectWithValue("Not authenticated");
   }
-);
+});
 
 export const updateProfileAsync = createAsyncThunk<
   { user: User },
@@ -147,11 +146,10 @@ export const updateProfileAsync = createAsyncThunk<
 >("auth/updateProfile", async ({ username, profilePicture }, thunkAPI) => {
   try {
     const state = thunkAPI.getState();
-    const token = state.auth.token;
     const userId = state.auth.user?._id;
 
-    if (!token || !userId) {
-      return thunkAPI.rejectWithValue("No authentication");
+    if (!userId) {
+      return thunkAPI.rejectWithValue("User ID missing");
     }
 
     const response = await fetch(`/users/${userId}`, {
@@ -234,19 +232,20 @@ const authSlice = createSlice({
           isSuccess: false,
         };
       })
-      .addCase(checkAuth.pending, (state) => {
-        state.status = "loading";
+      .addCase(checkAuthAsync.pending, (state) => {
+        state.loading = true;
       })
-      .addCase(checkAuth.fulfilled, (state, action) => {
+      .addCase(checkAuthAsync.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.status = "succeeded";
+        state.loading = false;
       })
-      .addCase(checkAuth.rejected, (state) => {
+      .addCase(checkAuthAsync.rejected, (state) => {
         state.user = null;
-        state.token = null;
         state.isAuthenticated = false;
         state.status = "failed";
+        state.loading = false;
       })
       .addCase(updateProfileAsync.fulfilled, (state, action) => {
         state.user = action.payload.user;

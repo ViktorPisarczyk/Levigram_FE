@@ -18,20 +18,6 @@
     align-items: center;
     height: 100%;
 
-    img,
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 0.4rem;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    video {
-      background: #000;
-    }
-
     .remove-button {
       position: absolute;
       top: 8px;
@@ -54,6 +40,17 @@
       &:hover {
         background-color: rgba(0, 0, 0, 0.8);
       }
+    }
+
+    .preview-image,
+    .preview-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 0.4rem;
+      user-select: none;
+      pointer-events: none;
+      background: #000;
     }
   }
 
@@ -79,4 +76,52 @@
       }
     }
   }
+}
+
+.video-poster {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.4rem;
+  background-color: black;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  .play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+
+    .play-icon {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  }
+}
+
+.video-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  color: white;
+  font-size: 16px;
+  background: #000;
+  border-radius: 0.4rem;
+  text-align: center;
+  padding: 1rem;
 }
