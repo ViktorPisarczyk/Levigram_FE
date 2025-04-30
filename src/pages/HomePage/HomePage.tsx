@@ -44,20 +44,23 @@ const Home: React.FC = () => {
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (startY === null) return;
-    const endY = e.changedTouches[0].clientY;
-    const distance = endY - startY;
-
-    if (distance > 60 && !loading) {
-      setIsRefreshing(true);
-      dispatch(resetPosts());
-      dispatch(fetchPostsAsync(1)).finally(() => {
-        setTimeout(() => setIsRefreshing(false), 500);
-      });
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startY !== null && window.scrollY === 0) {
+      const currentY = e.touches[0].clientY;
+      const distance = currentY - startY;
+      if (distance > 80 && !loading && !isRefreshing) {
+        triggerRefresh();
+      }
     }
+  };
 
-    setStartY(null);
+  const triggerRefresh = () => {
+    setIsRefreshing(true);
+    dispatch(clearSearchResults());
+    dispatch(resetPosts());
+    dispatch(fetchPostsAsync(1)).finally(() => {
+      setTimeout(() => setIsRefreshing(false), 800); // Spinner bleibt etwas sichtbar
+    });
   };
 
   const handleObserver = useCallback(
@@ -116,17 +119,17 @@ const Home: React.FC = () => {
     <div
       className="home-page"
       onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
     >
       <div ref={scrollTopRef}></div>
+
+      <div className="logo" />
 
       {isRefreshing && (
         <div className="refresh-indicator">
           <div className="spinner" />
         </div>
       )}
-
-      <div className="logo"></div>
 
       <div className="post-feed">
         {currentList.map((post, index) => {
@@ -162,7 +165,7 @@ const Home: React.FC = () => {
 
       {isPostFormOpen && (
         <>
-          <div className="blur-overlay"></div>
+          <div className="blur-overlay" />
           <PostCreateForm
             onClose={() => dispatch(closePostForm())}
             triggerRef={postButtonRef as React.RefObject<HTMLElement>}
@@ -172,7 +175,7 @@ const Home: React.FC = () => {
 
       {isProfileEditOpen && (
         <>
-          <div className="blur-overlay"></div>
+          <div className="blur-overlay" />
           <ProfileEditForm
             onClose={() => dispatch(closeProfileEdit())}
             triggerRef={profileButtonRef}
@@ -182,7 +185,7 @@ const Home: React.FC = () => {
 
       {isSearchFormOpen && (
         <>
-          <div className="blur-overlay"></div>
+          <div className="blur-overlay" />
           <SearchForm
             onClose={() => dispatch(toggleSearchForm())}
             onSearch={handleSearch}
