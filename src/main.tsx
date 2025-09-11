@@ -18,6 +18,8 @@ createRoot(document.getElementById("root")!).render(
   </React.StrictMode>
 );
 
+console.log("VITE_VAPID_PUBLIC_KEY:", import.meta.env.VITE_VAPID_PUBLIC_KEY);
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
