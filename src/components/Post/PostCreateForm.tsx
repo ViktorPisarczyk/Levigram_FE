@@ -280,7 +280,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
             disabled={uploading}
             className="submit-button"
           >
-            Save
+            Post
           </button>
         </div>
       </div>

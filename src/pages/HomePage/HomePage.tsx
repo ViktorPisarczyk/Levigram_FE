@@ -34,23 +34,33 @@ const Home: React.FC = () => {
   const scrollTopRef = useRef<HTMLDivElement>(null);
   const postButtonRef = useRef<HTMLButtonElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
 
   const [startY, setStartY] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (window.scrollY === 0) {
+    // Prüfen ob Logo sichtbar ist
+    const logo = logoRef.current;
+    if (!logo) return;
+
+    const rect = logo.getBoundingClientRect();
+    const logoInView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+
+    if (logoInView) {
       setStartY(e.touches[0].clientY);
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (startY !== null && window.scrollY === 0) {
-      const currentY = e.touches[0].clientY;
-      const distance = currentY - startY;
-      if (distance > 80 && !loading && !isRefreshing) {
-        triggerRefresh();
-      }
+    if (startY === null || isRefreshing || loading) return;
+
+    const currentY = e.touches[0].clientY;
+    const distance = currentY - startY;
+
+    if (distance > 80) {
+      triggerRefresh();
+      setStartY(null); // verhindern von mehrfach-Trigger
     }
   };
 
@@ -59,7 +69,7 @@ const Home: React.FC = () => {
     dispatch(clearSearchResults());
     dispatch(resetPosts());
     dispatch(fetchPostsAsync(1)).finally(() => {
-      setTimeout(() => setIsRefreshing(false), 800); // Spinner bleibt etwas sichtbar
+      setTimeout(() => setIsRefreshing(false), 800);
     });
   };
 
@@ -123,7 +133,7 @@ const Home: React.FC = () => {
     >
       <div ref={scrollTopRef}></div>
 
-      <div className="logo" />
+      <div ref={logoRef} className="logo" />
 
       {isRefreshing && (
         <div className="refresh-indicator">

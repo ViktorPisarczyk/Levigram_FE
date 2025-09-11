@@ -6,6 +6,8 @@ import { store } from "./redux/store";
 import App from "./App";
 import "./index.scss";
 
+import { autoEnableNotifications } from "./push";
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
@@ -23,6 +25,21 @@ if ("serviceWorker" in navigator) {
         "/service-worker.js"
       );
       console.log("Service Worker registered with scope:", registration.scope);
+
+      const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as
+        | string
+        | undefined;
+      if (publicKey) {
+        try {
+          await autoEnableNotifications(publicKey);
+        } catch (e) {
+          console.warn("Auto-enable notifications failed:", e);
+        }
+      } else {
+        console.warn(
+          "VITE_VAPID_PUBLIC_KEY is missing – set it in your frontend env."
+        );
+      }
     } catch (error) {
       console.error("Service Worker registration failed:", error);
     }
