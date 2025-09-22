@@ -1,7 +1,7 @@
 # Levigram – Private Family Social App 👨‍👩‍👧‍👦✨
 
 Levigram is a **private social media app** for family & close friends.  
-It creates a safe space to share posts, pictures, and memories, only accessible via invitation.
+It creates a safe space to share posts, pictures, videos and memories, only accessible via invitation.
 
 ---
 
@@ -36,7 +36,7 @@ It creates a safe space to share posts, pictures, and memories, only accessible 
 
 ---
 
-### 🏠 Landing Page
+### 🏠 Landing Page (Light- & Darkmode)
 
 <p align="center">
   <img src="./screenshots/LandingPage_Light.png" alt="Landing Page Light Mode" width="45%" />
