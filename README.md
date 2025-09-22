@@ -91,6 +91,6 @@ It creates a safe space to share posts, pictures, videos and memories, only acce
 - Cloudinary (media hosting)
 - Render (deployment)
 
-Find the backend here: ([Levigram_BE](https://github.com/ViktorPisarczyk/Levigram_BE))
-
 ---
+
+👉 [Go to the backend repository](https://github.com/ViktorPisarczyk/Levigram_BE)
