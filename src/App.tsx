@@ -4,10 +4,12 @@ import { useAppSelector, useAppDispatch } from "./redux/hooks";
 import { checkAuthAsync } from "./redux/features/auth/authSlice";
 import { setDarkMode } from "./redux/features/theme/themeSlice";
 import { Toaster } from "react-hot-toast";
+import { ensureSubscriptionSynced } from "./push";
 
 import Login from "./pages/LoginPage/LoginPage";
 import Home from "./pages/HomePage/HomePage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage/ForgotPasswordPage";
+import IosPushPrompt from "./IosPushPrompt";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -73,12 +75,20 @@ const App: React.FC = () => {
     });
   };
 
-  // ✅ Debug logging
   useEffect(() => {
-    console.log("🔐 Auth status:", status);
-    console.log("👤 User:", user);
-    console.log("✅ isAuthenticated:", isAuthenticated);
-  }, [status, user, isAuthenticated]);
+    const pub = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+    if (!pub) return;
+
+    if (
+      status === "succeeded" &&
+      isAuthenticated &&
+      Notification.permission === "granted"
+    ) {
+      ensureSubscriptionSynced(pub).catch((e) =>
+        console.warn("Resync subscription failed:", e)
+      );
+    }
+  }, [status, isAuthenticated, import.meta.env.VITE_VAPID_PUBLIC_KEY]);
 
   return (
     <>
@@ -142,6 +152,7 @@ const App: React.FC = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <IosPushPrompt />
     </>
   );
 };

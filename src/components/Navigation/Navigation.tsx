@@ -19,7 +19,6 @@ import {
   IoSunnyOutline,
 } from "react-icons/io5";
 import { IoIosAddCircleOutline } from "react-icons/io";
-import { CiLight } from "react-icons/ci";
 import { CgProfile } from "react-icons/cg";
 
 interface NavigationProps {

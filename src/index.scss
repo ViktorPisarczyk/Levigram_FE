@@ -19,6 +19,7 @@
   --placeholder-text: #888;
   --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(170, 183, 196, 0.2);
   --background-image: url("./assets/images/istockphoto-887138350-612x612.jpg");
+  --background-size: auto;
 }
 
 [data-theme="dark"] {
@@ -34,7 +35,8 @@
   --placeholder-text: #888;
   --box-shadow: 0 0 10px rgba(200, 180, 255, 0.15),
     0 0 18px rgba(200, 180, 255, 0.1);
-  --background-image: none;
+  --background-image: url("./assets/images/94597.jpg");
+  --background-size: 350px auto;
 }
 
 html,
@@ -50,7 +52,7 @@ body {
   background-color: var(--primary);
   background-image: var(--background-image);
   background-repeat: repeat;
-  background-size: auto;
+  background-size: var(--background-size);
   background-position: top left;
   background-attachment: fixed;
   font-family: "Inter", sans-serif;
