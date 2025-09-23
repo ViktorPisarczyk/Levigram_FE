@@ -469,24 +469,26 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                   className="keen-slider__slide gallery-slide"
                   key={`g-${idx}`}
                 >
-                  {isVideo ? (
-                    <video
-                      src={item.url}
-                      poster={item.poster || generatedPosters[item.url]}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      className="gallery-media"
-                    />
-                  ) : (
-                    <PinchZoom
-                      ref={(el) => {
-                        pinchRefs.current[idx] = el;
-                      }}
-                      src={item.url}
-                      alt={`gallery-${idx}`}
-                    />
-                  )}
+                  <div className="gallery-frame">
+                    {isVideo ? (
+                      <video
+                        src={item.url}
+                        poster={item.poster || generatedPosters[item.url]}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="gallery-media"
+                      />
+                    ) : (
+                      <PinchZoom
+                        ref={(el) => {
+                          pinchRefs.current[idx] = el;
+                        }}
+                        src={item.url}
+                        alt={`gallery-${idx}`}
+                      />
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -498,7 +500,21 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
             aria-label="Schließen"
             title="Schließen"
           >
-            ✕
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
 
           {media.length > 1 && (
