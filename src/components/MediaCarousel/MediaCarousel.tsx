@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import "./MediaCarousel.scss";
@@ -12,155 +18,159 @@ type PinchZoomProps = {
   maxScale?: number;
 };
 
-const PinchZoom: React.FC<PinchZoomProps> = ({ src, alt, maxScale = 4 }) => {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = useState(1);
-  const [tx, setTx] = useState(0);
-  const [ty, setTy] = useState(0);
-  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const startDist = useRef<number | null>(null);
-  const startScale = useRef(1);
-  const lastPos = useRef<{ x: number; y: number } | null>(null);
+export type PinchZoomHandle = { reset: () => void };
 
-  const clampTranslate = (nx: number, ny: number) => {
-    const el = wrapRef.current;
-    if (!el) return { x: nx, y: ny };
-    const rect = el.getBoundingClientRect();
-    const maxX = ((scale - 1) * rect.width) / 2;
-    const maxY = ((scale - 1) * rect.height) / 2;
-    return { x: clamp(nx, -maxX, maxX), y: clamp(ny, -maxY, maxY) };
-  };
+const PinchZoom = forwardRef<PinchZoomHandle, PinchZoomProps>(
+  ({ src, alt, maxScale = 4 }, ref) => {
+    const wrapRef = useRef<HTMLDivElement | null>(null);
+    const [scale, setScale] = useState(1);
+    const [tx, setTx] = useState(0);
+    const [ty, setTy] = useState(0);
+    const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
+    const startDist = useRef<number | null>(null);
+    const startScale = useRef(1);
+    const lastPos = useRef<{ x: number; y: number } | null>(null);
 
-  const reset = () => {
-    setScale(1);
-    setTx(0);
-    setTy(0);
-  };
+    const clampTranslate = (nx: number, ny: number) => {
+      const el = wrapRef.current;
+      if (!el) return { x: nx, y: ny };
+      const rect = el.getBoundingClientRect();
+      const maxX = ((scale - 1) * rect.width) / 2;
+      const maxY = ((scale - 1) * rect.height) / 2;
+      return { x: clamp(nx, -maxX, maxX), y: clamp(ny, -maxY, maxY) };
+    };
 
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (scale > 1) e.stopPropagation();
+    const reset = () => {
+      setScale(1);
+      setTx(0);
+      setTy(0);
+    };
 
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointers.current.size === 1) {
-      lastPos.current = { x: e.clientX, y: e.clientY };
-    } else if (pointers.current.size === 2) {
-      const arr = Array.from(pointers.current.values());
-      const dx = arr[0].x - arr[1].x;
-      const dy = arr[0].y - arr[1].y;
-      startDist.current = Math.hypot(dx, dy);
-      startScale.current = scale;
-    }
-  };
+    useImperativeHandle(ref, () => ({ reset }), [reset]);
 
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!pointers.current.has(e.pointerId)) return;
-    const was = pointers.current.get(e.pointerId)!;
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+      if (scale > 1) e.stopPropagation();
 
-    if (pointers.current.size === 1 && scale > 1 && lastPos.current) {
-      e.stopPropagation();
-      const dx = e.clientX - lastPos.current.x;
-      const dy = e.clientY - lastPos.current.y;
-      const clamped = clampTranslate(tx + dx, ty + dy);
-      setTx(clamped.x);
-      setTy(clamped.y);
-      lastPos.current = { x: e.clientX, y: e.clientY };
-    }
+      (e.target as Element).setPointerCapture?.(e.pointerId);
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.current.size === 1) {
+        lastPos.current = { x: e.clientX, y: e.clientY };
+      } else if (pointers.current.size === 2) {
+        const arr = Array.from(pointers.current.values());
+        const dx = arr[0].x - arr[1].x;
+        const dy = arr[0].y - arr[1].y;
+        startDist.current = Math.hypot(dx, dy);
+        startScale.current = scale;
+      }
+    };
 
-    if (pointers.current.size === 2 && startDist.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      const arr = Array.from(pointers.current.values());
-      const dx = arr[0].x - arr[1].x;
-      const dy = arr[0].y - arr[1].y;
-      const dist = Math.hypot(dx, dy);
-      const next = clamp(
-        (startScale.current * dist) / startDist.current,
-        1,
-        maxScale
-      );
-      if (next === 1) {
-        setScale(1);
-        setTx(0);
-        setTy(0);
-      } else {
+    const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!pointers.current.has(e.pointerId)) return;
+      pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (pointers.current.size === 1 && scale > 1 && lastPos.current) {
+        e.stopPropagation();
+        const dx = e.clientX - lastPos.current.x;
+        const dy = e.clientY - lastPos.current.y;
+        const clamped = clampTranslate(tx + dx, ty + dy);
+        setTx(clamped.x);
+        setTy(clamped.y);
+        lastPos.current = { x: e.clientX, y: e.clientY };
+      }
+
+      if (pointers.current.size === 2 && startDist.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        const arr = Array.from(pointers.current.values());
+        const dx = arr[0].x - arr[1].x;
+        const dy = arr[0].y - arr[1].y;
+        const dist = Math.hypot(dx, dy);
+        const next = clamp(
+          (startScale.current * dist) / startDist.current,
+          1,
+          maxScale
+        );
+        if (next === 1) {
+          setScale(1);
+          setTx(0);
+          setTy(0);
+        } else {
+          setScale(next);
+          const clamped = clampTranslate(tx, ty);
+          setTx(clamped.x);
+          setTy(clamped.y);
+        }
+      }
+    };
+
+    const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+      pointers.current.delete(e.pointerId);
+      if (pointers.current.size < 2) {
+        startDist.current = null;
+      }
+      if (pointers.current.size === 0) {
+        lastPos.current = null;
+      }
+    };
+
+    const onWheel = (e: React.WheelEvent) => {
+      if (e.ctrlKey || true) {
+        e.preventDefault();
+        const delta = -e.deltaY;
+        const step = delta > 0 ? 0.1 : -0.1;
+        const next = clamp(scale + step, 1, maxScale);
         setScale(next);
-        const clamped = clampTranslate(tx, ty);
-        setTx(clamped.x);
-        setTy(clamped.y);
+        if (next === 1) {
+          setTx(0);
+          setTy(0);
+        } else {
+          const clamped = clampTranslate(tx, ty);
+          setTx(clamped.x);
+          setTy(clamped.y);
+        }
       }
-    }
-  };
+    };
 
-  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    pointers.current.delete(e.pointerId);
-    if (pointers.current.size < 2) {
-      startDist.current = null;
-    }
-    if (pointers.current.size === 0) {
-      lastPos.current = null;
-    }
-  };
-
-  const onWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || true) {
+    const onDoubleClick = (e: React.MouseEvent) => {
       e.preventDefault();
-      const delta = -e.deltaY;
-      const step = delta > 0 ? 0.1 : -0.1;
-      const next = clamp(scale + step, 1, maxScale);
-      setScale(next);
-      if (next === 1) {
-        setTx(0);
-        setTy(0);
-      } else {
-        const clamped = clampTranslate(tx, ty);
-        setTx(clamped.x);
-        setTy(clamped.y);
-      }
-    }
-  };
+      if (scale === 1) setScale(2);
+      else reset();
+    };
 
-  const onDoubleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (scale === 1) setScale(2);
-    else reset();
-  };
-
-  return (
-    <div
-      ref={wrapRef}
-      className={`pz-wrap ${scale > 1 ? "pz-zoomed" : ""}`}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-      onWheel={onWheel}
-      onDoubleClick={onDoubleClick}
-      style={{ touchAction: scale > 1 ? "none" : "pan-y" }}
-    >
-      <img
-        src={src}
-        alt={alt}
-        className="pz-media"
-        draggable={false}
-        style={{
-          transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
-        }}
-      />
-      {scale > 1 && (
-        <button
-          className="pz-reset"
-          onClick={reset}
-          aria-label="Zoom zurücksetzen"
-          title="Zurücksetzen"
-        >
-          Reset
-        </button>
-      )}
-    </div>
-  );
-};
+    return (
+      <div
+        ref={wrapRef}
+        className={`pz-wrap ${scale > 1 ? "pz-zoomed" : ""}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onWheel={onWheel}
+        onDoubleClick={onDoubleClick}
+        style={{ touchAction: scale > 1 ? "none" : "pan-y" }}
+      >
+        <img
+          src={src}
+          alt={alt}
+          className="pz-media"
+          draggable={false}
+          style={{ transform: `translate(${tx}px, ${ty}px) scale(${scale})` }}
+        />
+        {scale > 1 && (
+          <button
+            className="pz-reset"
+            onClick={reset}
+            aria-label="Zoom zurücksetzen"
+            title="Zurücksetzen"
+          >
+            Reset
+          </button>
+        )}
+      </div>
+    );
+  }
+);
+PinchZoom.displayName = "PinchZoom";
 
 interface MediaItem {
   url: string;
@@ -183,6 +193,8 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryInitial, setGalleryInitial] = useState(0);
   const [galleryIndex, setGalleryIndex] = useState(0);
+
+  const pinchRefs = useRef<(PinchZoomHandle | null)[]>([]);
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
@@ -267,9 +279,16 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
 
   const [galleryRef, galleryInstanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
-    mode: "free",
+    mode: "snap",
     initial: galleryInitial,
-    slideChanged: (s) => setGalleryIndex(s.track.details.rel),
+    renderMode: "precision",
+    slides: { perView: 1, spacing: 0 },
+    rubberband: false as any,
+    drag: true,
+    slideChanged: (s) => {
+      setGalleryIndex(s.track.details.rel);
+      pinchRefs.current.forEach((r) => r?.reset());
+    },
   });
 
   useEffect(() => {
@@ -374,15 +393,20 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                       title="Vollbild"
                     >
                       <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
                         viewBox="0 0 24 24"
-                        width="18"
-                        height="18"
-                        aria-hidden="true"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <path
-                          d="M3 9V3h6v2H5v4H3zm12-6h6v6h-2V5h-4V3zM3 15h2v4h4v2H3v-6zm16 0h2v6h-6v-2h4v-4z"
-                          fill="currentColor"
-                        />
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
                       </svg>
                     </button>
                     <button
@@ -400,15 +424,19 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                       title="Download"
                     >
                       <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
                         viewBox="0 0 24 24"
-                        width="18"
-                        height="18"
-                        aria-hidden="true"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        <path
-                          d="M5 20h14v-2H5v2zm7-18v12l5-5 1.41 1.41L12 18.83 6.59 12.41 8 11l4 4V2z"
-                          fill="currentColor"
-                        />
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
                       </svg>
                     </button>
                   </div>
@@ -451,7 +479,13 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                       className="gallery-media"
                     />
                   ) : (
-                    <PinchZoom src={item.url} alt={`gallery-${idx}`} />
+                    <PinchZoom
+                      ref={(el) => {
+                        pinchRefs.current[idx] = el;
+                      }}
+                      src={item.url}
+                      alt={`gallery-${idx}`}
+                    />
                   )}
                 </div>
               );
@@ -502,6 +536,22 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
             >
               ⬇
             </button>
+          )}
+
+          {media.length > 1 && (
+            <div className="gallery-dots">
+              {media.map((_, idx) => (
+                <button
+                  key={`gdot-${idx}`}
+                  onClick={() => galleryInstanceRef.current?.moveToIdx(idx)}
+                  className={
+                    galleryIndex === idx ? "gallery-dot active" : "gallery-dot"
+                  }
+                  aria-label={`Bild ${idx + 1} von ${media.length}`}
+                  title={`Bild ${idx + 1}`}
+                />
+              ))}
+            </div>
           )}
         </div>
       )}
