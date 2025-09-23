@@ -106,15 +106,19 @@ const Home: React.FC = () => {
       );
 
       const data = await res.json();
-      if (res.ok) {
-        const sorted = data.sort(
-          (a: any, b: any) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        dispatch(setSearchResults(sorted));
-      } else {
-        console.error(data.message);
+      if (!res.ok) {
+        console.error("Search failed:", data?.message || res.statusText);
+        return;
       }
+
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      const sorted = [...items].sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      dispatch(setSearchResults(sorted));
     } catch (err) {
       console.error("Fehler beim Suchen:", err);
     }
