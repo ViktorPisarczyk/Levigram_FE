@@ -3,6 +3,165 @@ import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import "./MediaCarousel.scss";
 
+const clamp = (v: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, v));
+
+type PinchZoomProps = {
+  src: string;
+  alt: string;
+  maxScale?: number;
+};
+
+const PinchZoom: React.FC<PinchZoomProps> = ({ src, alt, maxScale = 4 }) => {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [scale, setScale] = useState(1);
+  const [tx, setTx] = useState(0);
+  const [ty, setTy] = useState(0);
+  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const startDist = useRef<number | null>(null);
+  const startScale = useRef(1);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
+
+  const clampTranslate = (nx: number, ny: number) => {
+    const el = wrapRef.current;
+    if (!el) return { x: nx, y: ny };
+    const rect = el.getBoundingClientRect();
+    const maxX = ((scale - 1) * rect.width) / 2;
+    const maxY = ((scale - 1) * rect.height) / 2;
+    return { x: clamp(nx, -maxX, maxX), y: clamp(ny, -maxY, maxY) };
+  };
+
+  const reset = () => {
+    setScale(1);
+    setTx(0);
+    setTy(0);
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (scale > 1) e.stopPropagation();
+
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 1) {
+      lastPos.current = { x: e.clientX, y: e.clientY };
+    } else if (pointers.current.size === 2) {
+      const arr = Array.from(pointers.current.values());
+      const dx = arr[0].x - arr[1].x;
+      const dy = arr[0].y - arr[1].y;
+      startDist.current = Math.hypot(dx, dy);
+      startScale.current = scale;
+    }
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    const was = pointers.current.get(e.pointerId)!;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.current.size === 1 && scale > 1 && lastPos.current) {
+      e.stopPropagation();
+      const dx = e.clientX - lastPos.current.x;
+      const dy = e.clientY - lastPos.current.y;
+      const clamped = clampTranslate(tx + dx, ty + dy);
+      setTx(clamped.x);
+      setTy(clamped.y);
+      lastPos.current = { x: e.clientX, y: e.clientY };
+    }
+
+    if (pointers.current.size === 2 && startDist.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      const arr = Array.from(pointers.current.values());
+      const dx = arr[0].x - arr[1].x;
+      const dy = arr[0].y - arr[1].y;
+      const dist = Math.hypot(dx, dy);
+      const next = clamp(
+        (startScale.current * dist) / startDist.current,
+        1,
+        maxScale
+      );
+      if (next === 1) {
+        setScale(1);
+        setTx(0);
+        setTy(0);
+      } else {
+        setScale(next);
+        const clamped = clampTranslate(tx, ty);
+        setTx(clamped.x);
+        setTy(clamped.y);
+      }
+    }
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) {
+      startDist.current = null;
+    }
+    if (pointers.current.size === 0) {
+      lastPos.current = null;
+    }
+  };
+
+  const onWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || true) {
+      e.preventDefault();
+      const delta = -e.deltaY;
+      const step = delta > 0 ? 0.1 : -0.1;
+      const next = clamp(scale + step, 1, maxScale);
+      setScale(next);
+      if (next === 1) {
+        setTx(0);
+        setTy(0);
+      } else {
+        const clamped = clampTranslate(tx, ty);
+        setTx(clamped.x);
+        setTy(clamped.y);
+      }
+    }
+  };
+
+  const onDoubleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (scale === 1) setScale(2);
+    else reset();
+  };
+
+  return (
+    <div
+      ref={wrapRef}
+      className={`pz-wrap ${scale > 1 ? "pz-zoomed" : ""}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onWheel={onWheel}
+      onDoubleClick={onDoubleClick}
+      style={{ touchAction: scale > 1 ? "none" : "pan-y" }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className="pz-media"
+        draggable={false}
+        style={{
+          transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
+        }}
+      />
+      {scale > 1 && (
+        <button
+          className="pz-reset"
+          onClick={reset}
+          aria-label="Zoom zurücksetzen"
+          title="Zurücksetzen"
+        >
+          Reset
+        </button>
+      )}
+    </div>
+  );
+};
+
 interface MediaItem {
   url: string;
   poster?: string;
@@ -21,9 +180,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
 
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
 
-  const imageRefs = useRef<Record<number, HTMLImageElement | null>>({});
-
-  const [modalIndex, setModalIndex] = useState<number | null>(null);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryInitial, setGalleryInitial] = useState(0);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
@@ -89,27 +248,40 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     setPlayingIndex(index);
   };
 
-  const openImageFullscreen = async (index: number) => {
-    const img = imageRefs.current[index] as any;
-    try {
-      if (img?.requestFullscreen) {
-        await img.requestFullscreen();
-        return;
-      }
-      if (img?.webkitRequestFullscreen) {
-        img.webkitRequestFullscreen();
-        return;
-      }
-      if (img?.msRequestFullscreen) {
-        img.msRequestFullscreen();
-        return;
-      }
-      setModalIndex(index);
-    } catch (e) {
-      console.warn("Fullscreen nicht möglich, nutze Modal:", e);
-      setModalIndex(index);
-    }
+  const openGallery = (index: number) => {
+    setGalleryInitial(index);
+    setGalleryIndex(index);
+    setIsGalleryOpen(true);
   };
+  const closeGallery = () => setIsGalleryOpen(false);
+
+  useEffect(() => {
+    if (isGalleryOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isGalleryOpen]);
+
+  const [galleryRef, galleryInstanceRef] = useKeenSlider<HTMLDivElement>({
+    loop: false,
+    mode: "free",
+    initial: galleryInitial,
+    slideChanged: (s) => setGalleryIndex(s.track.details.rel),
+  });
+
+  useEffect(() => {
+    if (!isGalleryOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeGallery();
+      if (e.key === "ArrowRight") galleryInstanceRef.current?.next();
+      if (e.key === "ArrowLeft") galleryInstanceRef.current?.prev();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isGalleryOpen, galleryInstanceRef]);
 
   const downloadImage = async (url: string, filename?: string) => {
     try {
@@ -185,22 +357,18 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
               ) : (
                 <div className="image-wrapper">
                   <img
-                    ref={(el) => {
-                      imageRefs.current[index] = el;
-                    }}
                     src={item.url}
                     alt={`media-${index}`}
                     className="post-media"
                     draggable={false}
                   />
-
                   <div className="image-actions">
                     <button
                       type="button"
                       className="icon-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openImageFullscreen(index);
+                        openGallery(index);
                       }}
                       aria-label="Bild im Vollbild anzeigen"
                       title="Vollbild"
@@ -217,7 +385,6 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                         />
                       </svg>
                     </button>
-
                     <button
                       type="button"
                       className="icon-btn"
@@ -264,27 +431,78 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
         </div>
       )}
 
-      {modalIndex !== null && (
-        <div
-          className="image-modal"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setModalIndex(null)}
-        >
-          <img
-            src={media[modalIndex].url}
-            alt={`media-full-${modalIndex}`}
-            className="image-modal-pic"
-            onClick={(e) => e.stopPropagation()}
-          />
+      {isGalleryOpen && (
+        <div className="gallery-modal" role="dialog" aria-modal="true">
+          <div ref={galleryRef} className="keen-slider gallery-slider">
+            {media.map((item, idx) => {
+              const isVideo = item.url.match(/\.(mp4|mov|webm|ogg)$/i);
+              return (
+                <div
+                  className="keen-slider__slide gallery-slide"
+                  key={`g-${idx}`}
+                >
+                  {isVideo ? (
+                    <video
+                      src={item.url}
+                      poster={item.poster || generatedPosters[item.url]}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="gallery-media"
+                    />
+                  ) : (
+                    <PinchZoom src={item.url} alt={`gallery-${idx}`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
           <button
-            className="image-modal-close"
-            onClick={() => setModalIndex(null)}
+            className="gallery-close"
+            onClick={closeGallery}
             aria-label="Schließen"
             title="Schließen"
           >
             ✕
           </button>
+
+          {media.length > 1 && (
+            <>
+              <button
+                className="gallery-prev"
+                onClick={() => galleryInstanceRef.current?.prev()}
+                aria-label="Vorheriges"
+                title="Zurück"
+              >
+                ‹
+              </button>
+              <button
+                className="gallery-next"
+                onClick={() => galleryInstanceRef.current?.next()}
+                aria-label="Nächstes"
+                title="Weiter"
+              >
+                ›
+              </button>
+            </>
+          )}
+
+          {!media[galleryIndex].url.match(/\.(mp4|mov|webm|ogg)$/i) && (
+            <button
+              className="gallery-download"
+              onClick={() => {
+                const url = media[galleryIndex].url;
+                const base = `levigram-${galleryIndex + 1}`;
+                const ext = (url.split(".").pop() || "jpg").split("?")[0];
+                downloadImage(url, `${base}.${ext}`);
+              }}
+              aria-label="Bild herunterladen"
+              title="Download"
+            >
+              ⬇
+            </button>
+          )}
         </div>
       )}
     </div>
