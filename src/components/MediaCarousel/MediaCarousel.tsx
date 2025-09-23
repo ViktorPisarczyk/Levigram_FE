@@ -21,7 +21,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
 
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
 
-  const imageRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const imageRefs = useRef<Record<number, HTMLImageElement | null>>({});
+
+  const [modalIndex, setModalIndex] = useState<number | null>(null);
 
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
@@ -87,34 +89,46 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     setPlayingIndex(index);
   };
 
-  /** Fullscreen-Helper */
-  const enterFullscreen = async (index: number) => {
-    const el = imageRefs.current[index];
-    if (!el) return;
-    const anyEl = el as any;
+  const openImageFullscreen = async (index: number) => {
+    const img = imageRefs.current[index] as any;
     try {
-      if (anyEl.requestFullscreen) await anyEl.requestFullscreen();
-      else if (anyEl.webkitRequestFullscreen) anyEl.webkitRequestFullscreen();
-      else if (anyEl.msRequestFullscreen) anyEl.msRequestFullscreen();
+      if (img?.requestFullscreen) {
+        await img.requestFullscreen();
+        return;
+      }
+      if (img?.webkitRequestFullscreen) {
+        img.webkitRequestFullscreen();
+        return;
+      }
+      if (img?.msRequestFullscreen) {
+        img.msRequestFullscreen();
+        return;
+      }
+      setModalIndex(index);
     } catch (e) {
-      console.warn("Fullscreen nicht möglich:", e);
+      console.warn("Fullscreen nicht möglich, nutze Modal:", e);
+      setModalIndex(index);
     }
   };
 
-  /** Cloudinary-Download */
-  const asAttachment = (url: string, filename?: string) => {
+  const downloadImage = async (url: string, filename?: string) => {
     try {
-      const u = new URL(url);
-      const parts = u.pathname.split("/upload/");
-      if (parts.length === 2) {
-        const name = filename ? `fl_attachment:${filename}` : "fl_attachment";
-        u.pathname = `${parts[0]}/upload/${name}/${parts[1]}`;
-        return u.toString();
-      }
-      u.searchParams.set("download", "true"); // Fallback
-      return u.toString();
-    } catch {
-      return url;
+      const res = await fetch(url, { credentials: "omit", mode: "cors" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = filename || url.split("/").pop() || "image";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+        a.remove();
+      }, 0);
+    } catch (err) {
+      console.error("Download fehlgeschlagen:", err);
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -169,14 +183,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                   <div className="video-loading">Generating preview...</div>
                 )
               ) : (
-                /** Fullscreen + Download */
-                <div
-                  className="image-wrapper"
-                  ref={(el) => {
-                    imageRefs.current[index] = el;
-                  }}
-                >
+                <div className="image-wrapper">
                   <img
+                    ref={(el) => {
+                      imageRefs.current[index] = el;
+                    }}
                     src={item.url}
                     alt={`media-${index}`}
                     className="post-media"
@@ -189,12 +200,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                       className="icon-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        enterFullscreen(index);
+                        openImageFullscreen(index);
                       }}
                       aria-label="Bild im Vollbild anzeigen"
                       title="Vollbild"
                     >
-                      {/* Fullscreen-Icon (inline SVG) */}
                       <svg
                         viewBox="0 0 24 24"
                         width="18"
@@ -208,17 +218,20 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                       </svg>
                     </button>
 
-                    <a
+                    <button
+                      type="button"
                       className="icon-btn"
-                      href={asAttachment(item.url, `levigram-${index + 1}.jpg`)}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const base = `levigram-${index + 1}`;
+                        const ext = (item.url.split(".").pop() || "jpg").split(
+                          "?"
+                        )[0];
+                        downloadImage(item.url, `${base}.${ext}`);
+                      }}
                       aria-label="Bild herunterladen"
                       title="Download"
                     >
-                      {/* Download-Icon (inline SVG) */}
                       <svg
                         viewBox="0 0 24 24"
                         width="18"
@@ -230,7 +243,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                           fill="currentColor"
                         />
                       </svg>
-                    </a>
+                    </button>
                   </div>
                 </div>
               )}
@@ -248,6 +261,30 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
               className={currentSlide === idx ? "dot active" : "dot"}
             />
           ))}
+        </div>
+      )}
+
+      {modalIndex !== null && (
+        <div
+          className="image-modal"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setModalIndex(null)}
+        >
+          <img
+            src={media[modalIndex].url}
+            alt={`media-full-${modalIndex}`}
+            className="image-modal-pic"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="image-modal-close"
+            onClick={() => setModalIndex(null)}
+            aria-label="Schließen"
+            title="Schließen"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>
