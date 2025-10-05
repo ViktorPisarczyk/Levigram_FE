@@ -82,6 +82,17 @@
   margin: 15px 5px 15px 5px;
   font-size: 15px;
   color: var(--text);
+
+  line-height: 1.4;
+  display: block;
+
+  img,
+  svg,
+  emoji {
+    height: 1em;
+    width: 1em;
+    vertical-align: -0.15em;
+  }
 }
 
 .post-meta-bar {
@@ -163,7 +174,7 @@
   transition: max-height 0.25s ease;
   border: none;
   border-radius: 10px;
-  margin-top: 6px;
+  margin-top: 13px;
   background: var(--textarea);
 
   &.open {
