@@ -99,8 +99,8 @@
   gap: 8px;
   min-height: 40px;
   padding: 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--tertiary);
+  background: var(--textarea);
   color: var(--text);
   border-radius: 10px;
   cursor: pointer;
@@ -112,6 +112,18 @@
     border-color: rgba(255, 255, 255, 0.35);
   }
   &:active {
+    transform: translateY(1px);
+  }
+
+  .like-hit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    margin-left: -6px;
+    border-radius: 8px;
+  }
+  .like-hit:active {
     transform: translateY(1px);
   }
 
@@ -130,6 +142,10 @@
   .icon-heart,
   .icon-comment {
     font-size: 18px;
+  }
+
+  .icon-heart {
+    pointer-events: none;
   }
 }
 

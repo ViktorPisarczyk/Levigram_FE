@@ -13,13 +13,14 @@ import {
   deleteCommentAsync,
   selectPostById,
   Comment as CommentType,
+  deletePostAsync,
 } from "./postSlice";
 import { RootState, AppDispatch } from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BsCheckLg, BsThreeDots } from "react-icons/bs";
-import { FaRegComment, FaRegHeart, FaHeart } from "react-icons/fa";
+import { FaRegComment, FaComment, FaRegHeart, FaHeart } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import defaultAvatar from "../../assets/images/defaultAvatar.png";
 import "./Post.scss";
@@ -251,6 +252,7 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
             setCommentToDeleteId(null);
           }}
           onConfirm={() => {
+            if (!commentToDeleteId) return;
             dispatch(
               deleteCommentAsync({ postId, commentId: commentToDeleteId })
             );
@@ -268,6 +270,7 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const post = useSelector((state: RootState) => selectPostById(state, postId));
+
   const [showDropDown, setShowDropDown] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -344,6 +347,62 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
 
   return (
     <div className="post-container">
+      <div className="post-header">
+        <div className="author-info">
+          <img src={avatar} alt="profile" className="profile-pic" />
+          <div className="author-text">
+            <strong>{displayName}</strong>
+            <small>{formatDate(post.createdAt)}</small>
+          </div>
+        </div>
+
+        {isOwnPost && (
+          <div className="post-options" ref={postOptionsRef}>
+            <button
+              onClick={() => setShowDropDown((prev) => !prev)}
+              className="dropdown-toggle"
+              aria-label="Post-Optionen"
+              title="Post-Optionen"
+            >
+              <BsThreeDots />
+            </button>
+
+            {showDropDown && (
+              <div className="dropdown-menu">
+                <button
+                  onClick={() => {
+                    setShowDropDown(false);
+                    setIsEditing(true);
+                  }}
+                >
+                  Bearbeiten
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowDropDown(false);
+                    setShowConfirm(true);
+                  }}
+                >
+                  Löschen
+                </button>
+              </div>
+            )}
+
+            {showConfirm && (
+              <ConfirmModal
+                message="Are you sure that you want to delete this post?"
+                onCancel={() => setShowConfirm(false)}
+                onConfirm={() => {
+                  dispatch(deletePostAsync(post._id));
+                  setShowConfirm(false);
+                }}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
       {isEditing ? (
         <>
           <div className="blur-overlay"></div>
@@ -365,25 +424,22 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
           aria-controls={`likes-panel-${post._id}`}
           title="Likes anzeigen"
         >
-          {hasLiked ? (
-            <FaHeart
-              className="icon-heart liked"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLike();
-              }}
-              title="Gefällt mir entfernen"
-            />
-          ) : (
-            <FaRegHeart
-              className="icon-heart"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLike();
-              }}
-              title="Gefällt mir"
-            />
-          )}
+          <span
+            className="like-hit"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLike();
+            }}
+            role="button"
+            aria-label={hasLiked ? "Gefällt mir entfernen" : "Gefällt mir"}
+            title={hasLiked ? "Gefällt mir entfernen" : "Gefällt mir"}
+          >
+            {hasLiked ? (
+              <FaHeart className="icon-heart liked" />
+            ) : (
+              <FaRegHeart className="icon-heart" />
+            )}
+          </span>
 
           <span className="meta-count">{post.likes.length}</span>
 
@@ -408,7 +464,11 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
           aria-expanded={showCommentForm}
           title="Kommentare anzeigen"
         >
-          <FaRegComment className="icon-comment" />
+          {post.comments?.length ? (
+            <FaComment className="icon-comment" />
+          ) : (
+            <FaRegComment className="icon-comment" />
+          )}
           <span className="meta-count">{post.comments?.length || 0}</span>
           <svg
             viewBox="0 0 24 24"
