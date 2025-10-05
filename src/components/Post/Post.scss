@@ -107,56 +107,39 @@
     transition: background 0.15s ease, border-color 0.15s ease,
       transform 0.05s ease;
 
-    .like-hit {
+    /* Einheitliche Abstände für beide Icons */
+    .icon-heart,
+    .icon-comment {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 6px;
-      margin: 0;
-      border-radius: 8px;
+      font-size: 18px;
+      width: 28px; /* sorgt für gleichen Abstand zur Zahl */
+      height: 28px;
     }
 
     .meta-count {
       font-weight: 600;
-      line-height: 1;
       font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transform: translateY(1px);
-    }
-
-    .icon-heart,
-    .icon-comment {
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transform: translateY(1px);
-    }
-
-    .icon-heart {
-      pointer-events: none;
+      min-width: 24px;
+      text-align: center;
     }
 
     .icon-chevron {
       margin-left: 4px;
-      transform: translateY(1px);
       transition: transform 0.2s ease;
     }
 
-    .icon-chevron.rot {
-      transform: rotate(180deg) translateY(1px);
+    &[aria-expanded="true"] .icon-chevron {
+      transform: rotate(180deg);
     }
-  }
 
-  /* Wenn ein Button geöffnet ist, dreht sich der Pfeil */
-  .meta-button[aria-expanded="true"] .icon-chevron {
-    transform: rotate(180deg) translateY(1px);
-  }
-
-  .meta-button.is-liked .icon-heart {
-    color: var(--danger);
+    &.is-liked .icon-heart {
+      color: var(--danger);
+    }
   }
 }
 
