@@ -84,35 +84,121 @@
   color: var(--text);
 }
 
-.post-actions {
-  display: flex;
+.post-meta-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0 6px 0;
+}
+
+.meta-button {
+  display: inline-grid;
+  grid-auto-flow: column;
   align-items: center;
-  gap: 10px;
-  margin: 12px 0px 4px 0px;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.05s ease;
 
-  button {
-    background: var(--quartiary);
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    margin-left: 5px;
-    color: var(--text);
-
-    svg {
-      margin-right: 5px;
-      transform: translateY(-1px);
-    }
-
-    span {
-      line-height: 1;
-    }
-
-    .liked {
-      color: var(--danger);
-    }
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.35);
   }
+  &:active {
+    transform: translateY(1px);
+  }
+
+  .meta-count {
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .icon-chevron {
+    transition: transform 0.2s ease;
+  }
+  .icon-chevron.rot {
+    transform: rotate(180deg);
+  }
+
+  .icon-heart,
+  .icon-comment {
+    font-size: 18px;
+  }
+}
+
+.meta-button.is-liked .icon-heart {
+  color: var(--danger);
+}
+
+.meta-button.has-comments .icon-comment {
+  color: #fff;
+}
+
+.likes-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  margin-top: 6px;
+  background: var(--textarea);
+
+  &.open {
+    max-height: 280px;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.likes-loading,
+.likes-empty {
+  padding: 10px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.likes-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.likes-item {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.likes-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #222;
+}
+
+.likes-name {
+  font-size: 14px;
+  color: var(--text);
 }
 
 .post-edit-form {

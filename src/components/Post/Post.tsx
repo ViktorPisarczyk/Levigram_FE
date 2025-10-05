@@ -13,11 +13,9 @@ import {
   deleteCommentAsync,
   selectPostById,
   Comment as CommentType,
-  deletePostAsync,
 } from "./postSlice";
 import { RootState, AppDispatch } from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BsCheckLg, BsThreeDots } from "react-icons/bs";
@@ -36,12 +34,8 @@ const formatDate = (dateString: string) => {
   const now = dayjs();
   const date = dayjs(dateString);
   const diffInHours = now.diff(date, "hour");
-
-  if (diffInHours < 24) {
-    return date.fromNow();
-  } else {
-    return date.format("DD.MM.YYYY");
-  }
+  if (diffInHours < 24) return date.fromNow();
+  return date.format("DD.MM.YYYY");
 };
 
 interface PostComponentProps {
@@ -279,6 +273,12 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  type Liker = { _id: string; username: string; profilePicture?: string };
+
+  const [likesOpen, setLikesOpen] = useState(false);
+  const [likers, setLikers] = useState<Liker[] | null>(null);
+  const [loadingLikes, setLoadingLikes] = useState(false);
+
   const postOptionsRef = useRef<HTMLDivElement>(null);
   useClickOutside(postOptionsRef, () => setShowDropDown(false));
 
@@ -294,14 +294,33 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
     dispatch(toggleLikeAsync({ postId: post._id, userId: user._id }));
   };
 
-  const { error } = useSelector((state: RootState) => state.posts);
+  const toggleLikes = async () => {
+    const next = !likesOpen;
+    setLikesOpen(next);
+    if (next && likers == null && post) {
+      try {
+        setLoadingLikes(true);
+        const res = await fetch(`/posts/${post._id}/likes`, {
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (res.ok) setLikers(data.likes || []);
+        else console.error(data.message || "Failed to load likes");
+      } catch (e) {
+        console.error("Failed to fetch likes:", e);
+      } finally {
+        setLoadingLikes(false);
+      }
+    }
+  };
 
+  const { error } = useSelector((state: RootState) => state.posts);
   if (error) {
     return (
       <div className="post-container error">Error loading post: {error}</div>
     );
   }
-
   if (!post) return <div className="post-container">Post not found.</div>;
 
   const isOwnPost = post.author._id === user?._id;
@@ -309,7 +328,6 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
     isOwnPost && user?.profilePicture
       ? user.profilePicture
       : post.author?.profilePicture || defaultAvatar;
-
   const displayName =
     post.author._id === user?._id ? user?.username : post.author.username;
 
@@ -326,60 +344,6 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
 
   return (
     <div className="post-container">
-      <div className="post-header">
-        <div className="author-info">
-          <img src={avatar} alt="profile" className="profile-pic" />
-          <div className="author-text">
-            <strong>{displayName}</strong>
-            <small>{formatDate(post.createdAt)}</small>
-          </div>
-        </div>
-
-        {isOwnPost && (
-          <div className="post-options" ref={postOptionsRef}>
-            <button
-              onClick={() => setShowDropDown((prev) => !prev)}
-              className="dropdown-toggle"
-            >
-              <BsThreeDots />
-            </button>
-
-            {showDropDown && (
-              <div className="dropdown-menu">
-                <button
-                  onClick={() => {
-                    setShowDropDown(false);
-                    setIsEditing(true);
-                  }}
-                >
-                  Bearbeiten
-                </button>
-
-                <button
-                  onClick={() => {
-                    setShowDropDown(false);
-                    setShowConfirm(true);
-                  }}
-                >
-                  Löschen
-                </button>
-              </div>
-            )}
-
-            {showConfirm && (
-              <ConfirmModal
-                message="Are you sure that you want to delete this post?"
-                onCancel={() => setShowConfirm(false)}
-                onConfirm={() => {
-                  dispatch(deletePostAsync(post._id));
-                  setShowConfirm(false);
-                }}
-              />
-            )}
-          </div>
-        )}
-      </div>
-
       {isEditing ? (
         <>
           <div className="blur-overlay"></div>
@@ -392,19 +356,96 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
         </>
       )}
 
-      <div className="post-actions">
-        <button onClick={handleLike}>
-          {hasLiked ? <FaHeart className="liked" /> : <FaRegHeart />}
-          <span>{post.likes.length}</span>
+      <div className="post-meta-bar">
+        <button
+          type="button"
+          className={`meta-button ${hasLiked ? "is-liked" : ""}`}
+          onClick={toggleLikes}
+          aria-expanded={likesOpen}
+          aria-controls={`likes-panel-${post._id}`}
+          title="Likes anzeigen"
+        >
+          {hasLiked ? (
+            <FaHeart
+              className="icon-heart liked"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLike();
+              }}
+              title="Gefällt mir entfernen"
+            />
+          ) : (
+            <FaRegHeart
+              className="icon-heart"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLike();
+              }}
+              title="Gefällt mir"
+            />
+          )}
+
+          <span className="meta-count">{post.likes.length}</span>
+
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            className={`icon-chevron ${likesOpen ? "rot" : ""}`}
+            aria-hidden="true"
+          >
+            <path d="M6 9l6 6 6-6" fill="currentColor" />
+          </svg>
         </button>
 
         <button
+          type="button"
           ref={commentToggleRef}
+          className={`meta-button ${
+            post.comments?.length ? "has-comments" : ""
+          }`}
           onClick={() => setShowCommentForm((prev) => !prev)}
+          aria-expanded={showCommentForm}
+          title="Kommentare anzeigen"
         >
-          <FaRegComment />
-          <span>{post.comments?.length}</span>
+          <FaRegComment className="icon-comment" />
+          <span className="meta-count">{post.comments?.length || 0}</span>
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            className="icon-chevron"
+            aria-hidden="true"
+          >
+            <path d="M6 9l6 6 6-6" fill="currentColor" />
+          </svg>
         </button>
+      </div>
+
+      <div
+        id={`likes-panel-${post._id}`}
+        className={`likes-panel ${likesOpen ? "open" : ""}`}
+        role="region"
+        aria-label="Liste der Likes"
+      >
+        {loadingLikes && <div className="likes-loading">Lade Likes…</div>}
+        {!loadingLikes && likers && likers.length === 0 && (
+          <div className="likes-empty">Noch keine Likes</div>
+        )}
+        {!loadingLikes && likers && likers.length > 0 && (
+          <ul className="likes-list">
+            {likers.map((u) => (
+              <li key={u._id} className="likes-item">
+                <img
+                  className="likes-avatar"
+                  src={u.profilePicture || defaultAvatar}
+                  alt={u.username}
+                />
+                <span className="likes-name">{u.username}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {showCommentForm && (
