@@ -154,27 +154,17 @@
   color: var(--danger);
 }
 
-.icon-stack {
-  position: relative;
-  width: 20px;
-  height: 20px;
-  display: inline-block;
+.icon-comment {
+  font-size: 18px;
+  transition: color 0.15s ease, fill 0.15s ease;
+}
 
-  .icon-comment {
-    position: absolute;
-    inset: 0;
-    font-size: 18px;
-  }
+.icon-comment.outline {
+  color: var(--text);
+}
 
-  .icon-base {
-    color: var(--text);
-  }
-
-  .icon-fill {
-    color: #fff;
-    opacity: 0;
-    transition: opacity 0.15s ease;
-  }
+.icon-comment.filled {
+  color: #fff;
 }
 
 .meta-button.has-comments .icon-stack .icon-fill {
