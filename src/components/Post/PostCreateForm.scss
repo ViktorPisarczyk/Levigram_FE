@@ -64,7 +64,7 @@
     padding: 6px 12px;
     font-size: 14px;
     height: 40px;
-    background-color: var(--quinary);
+    background-color: var(--tertiary);
     color: white;
     border: none;
     border-radius: 0.3rem;
@@ -104,7 +104,7 @@
       justify-content: center;
 
       &.cancel-button {
-        background: var(--tertiary);
+        background: var(--quinary);
         color: white;
       }
 
