@@ -202,8 +202,6 @@
 }
 
 .gallery-close,
-.gallery-prev,
-.gallery-next,
 .gallery-download {
   position: fixed;
   background: rgba(0, 0, 0, 0.7);
@@ -239,24 +237,6 @@
 .gallery-download svg {
   width: 22px;
   height: 22px;
-}
-
-.gallery-prev,
-.gallery-next {
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.gallery-prev {
-  left: 12px;
-}
-.gallery-next {
-  right: 12px;
 }
 
 .gallery-dots {

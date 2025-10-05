@@ -517,27 +517,6 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
             </svg>
           </button>
 
-          {media.length > 1 && (
-            <>
-              <button
-                className="gallery-prev"
-                onClick={() => galleryInstanceRef.current?.prev()}
-                aria-label="Vorheriges"
-                title="Zurück"
-              >
-                ‹
-              </button>
-              <button
-                className="gallery-next"
-                onClick={() => galleryInstanceRef.current?.next()}
-                aria-label="Nächstes"
-                title="Weiter"
-              >
-                ›
-              </button>
-            </>
-          )}
-
           {!media[galleryIndex].url.match(/\.(mp4|mov|webm|ogg)$/i) && (
             <button
               className="gallery-download"
