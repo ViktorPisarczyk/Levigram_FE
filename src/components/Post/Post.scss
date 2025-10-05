@@ -84,82 +84,88 @@
   color: var(--text);
 }
 
+/* --- META BUTTONS --- */
 .post-meta-bar {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin: 12px 0 6px 0;
-}
 
-.meta-button {
-  display: inline-grid;
-  grid-auto-flow: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 4px 10px;
-  border: 1px solid var(--tertiary);
-  background: var(--textarea);
-  color: var(--text);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease,
-    transform 0.05s ease;
-
-  .like-hit {
-    display: inline-flex;
+  .meta-button {
+    display: inline-grid;
+    grid-auto-flow: column;
     align-items: center;
     justify-content: center;
-    padding: 6px;
-    margin-left: -6px;
-    border-radius: 8px;
-  }
-  .like-hit:active {
-    transform: translateY(1px);
+    gap: 8px;
+    min-height: 36px;
+    padding: 4px 10px;
+    border: 1px solid var(--tertiary);
+    background: var(--textarea);
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease,
+      transform 0.05s ease;
+
+    .like-hit {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      margin: 0;
+      border-radius: 8px;
+    }
+
+    .meta-count {
+      font-weight: 600;
+      line-height: 1;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(1px);
+    }
+
+    .icon-heart,
+    .icon-comment {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(1px);
+    }
+
+    .icon-heart {
+      pointer-events: none;
+    }
+
+    .icon-chevron {
+      margin-left: 4px;
+      transform: translateY(1px);
+      transition: transform 0.2s ease;
+    }
+
+    .icon-chevron.rot {
+      transform: rotate(180deg) translateY(1px);
+    }
   }
 
-  .meta-count {
-    font-weight: 600;
-    line-height: 1;
-    font-size: 16px;
+  /* Wenn ein Button geöffnet ist, dreht sich der Pfeil */
+  .meta-button[aria-expanded="true"] .icon-chevron {
+    transform: rotate(180deg) translateY(1px);
   }
 
-  .icon-chevron {
-    transition: transform 0.2s ease;
-  }
-  .icon-chevron.rot {
-    transform: rotate(180deg);
-  }
-
-  .icon-heart,
-  .icon-comment {
-    font-size: 18px;
-  }
-
-  .icon-heart {
-    pointer-events: none;
+  .meta-button.is-liked .icon-heart {
+    color: var(--danger);
   }
 }
 
-.meta-button.is-liked .icon-heart {
-  color: var(--danger);
-}
-
-.icon-comment {
-  font-size: 18px;
-  color: var(--text);
-}
-
-.icon-comment.outline {
-  color: var(--text);
-}
-
+/* --- LIKES PANEL --- */
 .likes-panel {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.25s ease;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 10px;
   margin-top: 6px;
   background: var(--textarea);
@@ -215,6 +221,7 @@
   color: var(--text);
 }
 
+/* --- EDIT FORM --- */
 .post-edit-form {
   margin-top: 10px;
 
@@ -264,6 +271,7 @@
   }
 }
 
+/* --- COMMENTS --- */
 .comment-section {
   margin-top: 5px;
 
@@ -420,7 +428,6 @@
         .edit-button {
           height: 35px;
           padding: 0 18px;
-
           background-color: var(--quaternary);
           color: white;
           border: none;
@@ -429,16 +436,17 @@
           display: flex;
           align-items: center;
           justify-content: center;
-        }
 
-        .edit-button .check-icon {
-          font-size: 18px;
+          .check-icon {
+            font-size: 18px;
+          }
         }
       }
     }
   }
 }
 
+/* --- BLUR OVERLAY --- */
 .blur-overlay {
   position: fixed;
   top: 0;
