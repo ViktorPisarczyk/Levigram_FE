@@ -99,7 +99,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin: 12px 0 6px 0;
+  margin: 12px 0 2px 0;
 }
 
 .meta-button {
@@ -174,12 +174,14 @@
   transition: max-height 0.25s ease;
   border: none;
   border-radius: 10px;
-  margin-top: 13px;
+  margin-top: 0;
   background: var(--textarea);
+  padding-top: 0;
 
   &.open {
     max-height: 280px;
     border-color: rgba(255, 255, 255, 0.2);
+    padding-top: 8px;
   }
 }
 
