@@ -216,7 +216,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Edit your post..."
+            placeholder="Beitrag bearbeiten..."
           />
 
           {mediaFiles.length > 0 && (

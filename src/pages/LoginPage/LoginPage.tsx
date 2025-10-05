@@ -60,7 +60,7 @@ const Login: React.FC = () => {
           {!isLogin && (
             <>
               <div className="form-group">
-                <label>Username</label>
+                <label>Benutzername</label>
                 <input
                   type="text"
                   name="username"
@@ -73,7 +73,7 @@ const Login: React.FC = () => {
               </div>
 
               <div className="form-group">
-                <label>Invitation Code</label>
+                <label>Einladungscode</label>
                 <input
                   type="text"
                   name="inviteCode"
@@ -99,7 +99,7 @@ const Login: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label>Password</label>
+            <label>Passwort</label>
             <input
               type="password"
               name="password"
@@ -119,7 +119,7 @@ const Login: React.FC = () => {
         {isLogin && (
           <div className="extra-options">
             <button onClick={() => navigate("/forgot-password")}>
-              Forgot password?
+              Passwort vergessen?
             </button>
           </div>
         )}
@@ -130,7 +130,7 @@ const Login: React.FC = () => {
             onClick={() => dispatch(toggleLoginMode())}
             className="btn toggle"
           >
-            {isLogin ? "Create a new account" : "Back to login page"}
+            {isLogin ? "Ein neues Konto erstellen" : "Zurück zur Anmeldeseite"}
           </button>
         </div>
       </div>

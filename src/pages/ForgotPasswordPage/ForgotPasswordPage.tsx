@@ -54,7 +54,7 @@ const ForgotPasswordPage: React.FC = () => {
       <form onSubmit={handleReset} className="forgot-password-form">
         <input
           type="email"
-          placeholder="Your email address"
+          placeholder="Deine E-Mail-Adresse"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -63,7 +63,7 @@ const ForgotPasswordPage: React.FC = () => {
 
         <input
           type="password"
-          placeholder="New password"
+          placeholder="Neues Passwort"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
@@ -73,7 +73,7 @@ const ForgotPasswordPage: React.FC = () => {
 
         <input
           type="password"
-          placeholder="Confirm new password"
+          placeholder="Neues Passwort bestätigen"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
@@ -82,7 +82,7 @@ const ForgotPasswordPage: React.FC = () => {
         />
 
         <button type="submit" className="btn" disabled={loading}>
-          {loading ? "Processing..." : "Reset password"}
+          {loading ? "Wird verarbeitet..." : "Passwort zurücksetzen"}
         </button>
 
         <button
@@ -90,7 +90,7 @@ const ForgotPasswordPage: React.FC = () => {
           className="btn secondary"
           onClick={() => navigate("/")}
         >
-          Back to login
+          Zurück zur Anmeldung
         </button>
       </form>
     </div>

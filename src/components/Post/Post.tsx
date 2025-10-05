@@ -80,7 +80,7 @@ const CommentForm: FC<{ postId: string }> = ({ postId }) => {
     <form onSubmit={handleSubmit} className="comment-form">
       <input
         type="text"
-        placeholder="Write a comment..."
+        placeholder="Schreibe einen Kommentar..."
         value={text}
         onChange={(e: ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
       />
@@ -207,7 +207,7 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
                                 startEdit(comment._id, comment.text)
                               }
                             >
-                              Edit
+                              Bearbeiten
                             </button>
                             <button
                               onClick={() => {
@@ -216,7 +216,7 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
                                 setOpenDropdownId(null);
                               }}
                             >
-                              Delete
+                              Löschen
                             </button>
                           </div>
                         )}
@@ -251,7 +251,7 @@ const Comment: FC<{ comments?: CommentType[]; postId: string }> = ({
 
       {showConfirmDelete && commentToDeleteId && (
         <ConfirmModal
-          message="Are you sure you want to delete this comment?"
+          message="Bist du sicher, dass Du diesen Kommentar löschen möchtest?"
           onCancel={() => {
             setShowConfirmDelete(false);
             setCommentToDeleteId(null);
@@ -352,7 +352,7 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
                     setIsEditing(true);
                   }}
                 >
-                  Edit
+                  Bearbeiten
                 </button>
 
                 <button
@@ -361,7 +361,7 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
                     setShowConfirm(true);
                   }}
                 >
-                  Delete
+                  Löschen
                 </button>
               </div>
             )}
