@@ -12,7 +12,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   message,
   onConfirm,
   onCancel,
-  confirmText = "Delete",
+  confirmText = "Löschen",
 }) => {
   return (
     <div className="confirm-modal-backdrop">
@@ -20,7 +20,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <p>{message}</p>
         <div className="modal-actions">
           <button className="cancel-button" onClick={onCancel}>
-            Cancel
+            Abbrechen
           </button>
           <button className="delete-button" onClick={onConfirm}>
             {confirmText}
