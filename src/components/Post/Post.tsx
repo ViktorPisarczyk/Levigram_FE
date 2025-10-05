@@ -350,15 +350,28 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
   const displayName =
     post.author._id === user?._id ? user?.username : post.author.username;
 
+  const likesRef = useRef<HTMLDivElement>(null);
+  const likesToggleRef = useRef<HTMLButtonElement>(null);
+
   const commentRef = useRef<HTMLDivElement>(null);
   const commentToggleRef = useRef<HTMLButtonElement>(null);
+
+  useClickOutside(
+    likesRef,
+    () => {
+      if (likesOpen) setLikesOpen(false);
+    },
+    likesToggleRef,
+    { dragTolerance: 12, enabled: true }
+  );
 
   useClickOutside(
     commentRef,
     () => {
       if (showCommentForm) setShowCommentForm(false);
     },
-    commentToggleRef
+    commentToggleRef,
+    { dragTolerance: 12, enabled: true }
   );
 
   return (
@@ -434,6 +447,7 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
       <div className="post-meta-bar">
         <button
           type="button"
+          ref={likesToggleRef}
           className={`meta-button ${hasLiked ? "is-liked" : ""}`}
           onClick={toggleLikes}
           aria-expanded={likesOpen}
@@ -501,6 +515,7 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
 
       <div
         id={`likes-panel-${post._id}`}
+        ref={likesRef}
         className={`likes-panel ${likesOpen ? "open" : ""}`}
         role="region"
         aria-label="Liste der Likes"
