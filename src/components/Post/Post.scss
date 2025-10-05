@@ -84,71 +84,84 @@
   color: var(--text);
 }
 
-/* --- META BUTTONS --- */
 .post-meta-bar {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin: 12px 0 6px 0;
+}
 
-  .meta-button {
-    display: inline-grid;
-    grid-auto-flow: column;
+.meta-button {
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 10px;
+  border: 1px solid var(--tertiary);
+  background: var(--textarea);
+  color: var(--text);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.05s ease;
+
+  .like-hit {
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    min-height: 36px;
-    padding: 4px 10px;
-    border: 1px solid var(--tertiary);
-    background: var(--textarea);
-    color: var(--text);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease,
-      transform 0.05s ease;
+    padding: 6px;
+    margin: 0;
+    border-radius: 8px;
+  }
 
-    /* Einheitliche Abstände für beide Icons */
-    .icon-heart,
-    .icon-comment {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      width: 28px; /* sorgt für gleichen Abstand zur Zahl */
-      height: 28px;
-    }
+  .meta-count {
+    font-weight: 600;
+    line-height: 1;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .meta-count {
-      font-weight: 600;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 24px;
-      text-align: center;
-    }
+  .icon-heart,
+  .icon-comment {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .icon-chevron {
-      margin-left: 4px;
-      transition: transform 0.2s ease;
-    }
+  .icon-heart {
+    margin-right: 6px;
+  }
 
-    &[aria-expanded="true"] .icon-chevron {
-      transform: rotate(180deg);
-    }
+  .icon-comment {
+    margin-right: 6px;
+  }
 
-    &.is-liked .icon-heart {
-      color: var(--danger);
-    }
+  .icon-chevron {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+  }
+
+  .icon-chevron.rot {
+    transform: rotate(180deg);
   }
 }
 
-/* --- LIKES PANEL --- */
+.meta-button.is-liked .icon-heart {
+  color: var(--danger);
+}
+
 .likes-panel {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.25s ease;
-  border: 1px solid transparent;
+  border: none;
   border-radius: 10px;
   margin-top: 6px;
   background: var(--textarea);
@@ -204,7 +217,6 @@
   color: var(--text);
 }
 
-/* --- EDIT FORM --- */
 .post-edit-form {
   margin-top: 10px;
 
@@ -254,7 +266,6 @@
   }
 }
 
-/* --- COMMENTS --- */
 .comment-section {
   margin-top: 5px;
 
@@ -419,17 +430,16 @@
           display: flex;
           align-items: center;
           justify-content: center;
+        }
 
-          .check-icon {
-            font-size: 18px;
-          }
+        .edit-button .check-icon {
+          font-size: 18px;
         }
       }
     }
   }
 }
 
-/* --- BLUR OVERLAY --- */
 .blur-overlay {
   position: fixed;
   top: 0;
