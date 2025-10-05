@@ -156,19 +156,11 @@
 
 .icon-comment {
   font-size: 18px;
-  transition: color 0.15s ease, fill 0.15s ease;
+  color: var(--text);
 }
 
 .icon-comment.outline {
   color: var(--text);
-}
-
-.icon-comment.filled {
-  color: #fff;
-}
-
-.meta-button.has-comments .icon-stack .icon-fill {
-  opacity: 1;
 }
 
 .likes-panel {

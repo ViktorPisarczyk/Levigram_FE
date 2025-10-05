@@ -20,7 +20,12 @@ import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BsCheckLg, BsThreeDots } from "react-icons/bs";
-import { FaRegComment, FaComment, FaRegHeart, FaHeart } from "react-icons/fa";
+import {
+  FaRegComment,
+  FaRegCommentDots,
+  FaRegHeart,
+  FaHeart,
+} from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import defaultAvatar from "../../assets/images/defaultAvatar.png";
 import "./Post.scss";
@@ -300,6 +305,9 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
   const toggleLikes = async () => {
     const next = !likesOpen;
     setLikesOpen(next);
+
+    if (next) setShowCommentForm(false);
+
     if (next && likers == null && post) {
       try {
         setLoadingLikes(true);
@@ -316,6 +324,14 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
         setLoadingLikes(false);
       }
     }
+  };
+
+  const toggleComments = () => {
+    setShowCommentForm((prev) => {
+      const next = !prev;
+      if (next) setLikesOpen(false);
+      return next;
+    });
   };
 
   const { error } = useSelector((state: RootState) => state.posts);
@@ -460,15 +476,16 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
           className={`meta-button ${
             post.comments?.length ? "has-comments" : ""
           }`}
-          onClick={() => setShowCommentForm((prev) => !prev)}
+          onClick={toggleComments}
           aria-expanded={showCommentForm}
           title="Kommentare anzeigen"
         >
           {post.comments?.length ? (
-            <FaComment className="icon-comment filled" />
+            <FaRegCommentDots className="icon-comment" />
           ) : (
-            <FaRegComment className="icon-comment outline" />
+            <FaRegComment className="icon-comment" />
           )}
+
           <span className="meta-count">{post.comments?.length || 0}</span>
           <svg
             viewBox="0 0 24 24"
