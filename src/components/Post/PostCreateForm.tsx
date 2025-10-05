@@ -226,7 +226,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     <div ref={formRef} className="post-create-form">
       <div className="form-content">
         <textarea
-          placeholder="Please add a text..."
+          placeholder="Schreibe etwas..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
@@ -256,7 +256,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         )}
 
         <label htmlFor="media-upload" className="upload-button">
-          Upload media files
+          Bilder/Videos hochladen
         </label>
         <input
           id="media-upload"
@@ -273,14 +273,14 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
             disabled={uploading}
             className="cancel-button"
           >
-            Cancel
+            Abbrechen
           </button>
           <button
             onClick={handleSubmit}
             disabled={uploading}
             className="submit-button"
           >
-            Post
+            Posten
           </button>
         </div>
       </div>
@@ -288,7 +288,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
       {uploading && (
         <div className="uploading-overlay">
           <div className="spinner" />
-          <p className="loading-text">Post is loading…</p>
+          <p className="loading-text">Beitrag wird hochgeladen...</p>
         </div>
       )}
     </div>

@@ -244,7 +244,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
           )}
 
           <label htmlFor="edit-media-upload" className="upload-button">
-            Upload media files
+            Bilder/Videos hochladen
           </label>
           <input
             id="edit-media-upload"
@@ -262,14 +262,14 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
               disabled={uploading}
               className="cancel-button"
             >
-              Cancel
+              Abbrechen
             </button>
             <button
               type="submit"
               disabled={uploading}
               className="submit-button"
             >
-              Save
+              Speichern
             </button>
           </div>
         </div>
@@ -277,7 +277,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
         {uploading && (
           <div className="uploading-overlay">
             <div className="spinner" />
-            <p className="loading-text">Updating post…</p>
+            <p className="loading-text">Beitrag wird aktualisiert...</p>
           </div>
         )}
       </form>

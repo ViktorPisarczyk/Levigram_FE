@@ -137,7 +137,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
           onClick={() => setShowLogoutConfirm(true)}
         >
           <CiLogout />
-          Logout
+          Abmelden
         </button>
       </div>
 
@@ -147,7 +147,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         </div>
 
         <label htmlFor="profile-upload" className="upload-button">
-          Upload profile picture
+          Profilbild hochladen
         </label>
         <input
           id="profile-upload"
@@ -161,7 +161,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Your username..."
+          placeholder="Dein Benutzername..."
         />
 
         <div className="actions">
@@ -171,7 +171,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
             disabled={uploading}
             className="cancel-button"
           >
-            Cancel
+            Abbrechen
           </button>
           <button
             type="button"
@@ -179,7 +179,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
             disabled={uploading}
             className="submit-button"
           >
-            Save
+            Speichern
           </button>
         </div>
       </div>
@@ -187,16 +187,16 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       {uploading && (
         <div className="uploading-overlay">
           <div className="spinner" />
-          <p className="loading-text">Updating profile...</p>
+          <p className="loading-text">Profil wird aktualisiert...</p>
         </div>
       )}
 
       {showLogoutConfirm && (
         <ConfirmModal
-          message="Are you sure you want to logout?"
+          message="Bist du sicher, dass du dich abmelden möchtest?"
           onCancel={() => setShowLogoutConfirm(false)}
           onConfirm={handleLogout}
-          confirmText="Logout"
+          confirmText="Abmelden"
         />
       )}
     </div>
