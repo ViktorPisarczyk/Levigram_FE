@@ -97,8 +97,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 40px;
-  padding: 6px 10px;
+  min-height: 36px;
+  padding: 4px 10px;
   border: 1px solid var(--tertiary);
   background: var(--textarea);
   color: var(--text);
@@ -130,6 +130,7 @@
   .meta-count {
     font-weight: 600;
     line-height: 1;
+    font-size: 16px;
   }
 
   .icon-chevron {
@@ -153,8 +154,30 @@
   color: var(--danger);
 }
 
-.meta-button.has-comments .icon-comment {
-  color: #fff;
+.icon-stack {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+
+  .icon-comment {
+    position: absolute;
+    inset: 0;
+  }
+
+  .icon-base {
+    color: var(--text);
+  }
+
+  .icon-fill {
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+}
+
+.meta-button.has-comments .icon-stack .icon-fill {
+  opacity: 1;
 }
 
 .likes-panel {

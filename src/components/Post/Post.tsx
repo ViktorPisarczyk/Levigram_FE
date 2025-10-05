@@ -464,17 +464,18 @@ const PostComponent: FC<PostComponentProps> = ({ postId }) => {
           aria-expanded={showCommentForm}
           title="Kommentare anzeigen"
         >
-          {post.comments?.length ? (
-            <FaComment className="icon-comment" />
-          ) : (
-            <FaRegComment className="icon-comment" />
-          )}
+          <span className="icon-stack">
+            <FaRegComment className="icon-comment icon-base" />
+            <FaComment className="icon-comment icon-fill" />
+          </span>
+
           <span className="meta-count">{post.comments?.length || 0}</span>
+
           <svg
             viewBox="0 0 24 24"
             width="16"
             height="16"
-            className="icon-chevron"
+            className={`icon-chevron ${showCommentForm ? "rot" : ""}`}
             aria-hidden="true"
           >
             <path d="M6 9l6 6 6-6" fill="currentColor" />
