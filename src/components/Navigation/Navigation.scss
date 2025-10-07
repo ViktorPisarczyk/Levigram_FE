@@ -7,8 +7,9 @@
   width: 100%;
   max-width: 500px;
   background-color: var(--navigation);
-  padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: var(--box-shadow);
+  border-top: 1px solid var(--nav-border);
+  box-shadow: var(--nav-shadow);
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: space-around;
   align-items: center;
