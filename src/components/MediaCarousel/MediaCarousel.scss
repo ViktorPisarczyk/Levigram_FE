@@ -150,35 +150,40 @@
 .gallery-slide {
   display: grid;
   place-items: center;
-  width: 100%;
-  height: 100%;
+  width: var(--gallery-max-w);
+  max-width: 100vw;
+  height: var(--gallery-max-h);
+  max-height: var(--gallery-max-h);
+  margin: 0 auto;
 }
 
 /* Gemeinsamer Rahmen für beide Medientypen */
 .gallery-frame {
-  width: var(--gallery-max-w);
-  max-width: 100vw;
-  height: var(--gallery-max-h);
-  max-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: var(--gallery-max-w);
+  max-width: 100vw;
+  height: var(--gallery-max-h);
+  max-height: var(--gallery-max-h);
   background: #000;
-  overflow: hidden;
 }
 
 /* Bild/Video im Full View: gleiche Constraints */
-.gallery-frame > .gallery-media,
-.gallery-frame > .pz-wrap,
-.gallery-frame img.pz-media,
-.gallery-frame video.gallery-media {
-  width: 100%;
-  height: 100%;
+.gallery-media,
+.pz-wrap {
   max-width: 100%;
   max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   background: #000;
   display: block;
+}
+
+/* (Optional) Minimalpuffer, falls Video-Controls optisch stören */
+.gallery-frame video.gallery-media {
+  max-height: calc(100% - 0px); /* bei Bedarf 40–48px abziehen */
 }
 
 /* PinchZoom Wrapper & Bild */
