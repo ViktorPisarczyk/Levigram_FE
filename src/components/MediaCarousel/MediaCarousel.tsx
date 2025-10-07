@@ -48,10 +48,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const buildSrc = (w: number) => {
     if (!isCloudinary) return url;
     return context === "feed"
-      ? buildCloudinaryUrl(
-          url,
-          `f_auto,q_auto:good,dpr_auto,c_fill,ar_25:18,g_auto,w_${w}`
-        )
+      ? buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_${w}`)
       : buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_${w}`);
   };
 
