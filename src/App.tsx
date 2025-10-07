@@ -4,7 +4,6 @@ import { useAppSelector, useAppDispatch } from "./redux/hooks";
 import { checkAuthAsync } from "./redux/features/auth/authSlice";
 import { setDarkMode } from "./redux/features/theme/themeSlice";
 import { Toaster } from "react-hot-toast";
-import { ensureSubscriptionSynced } from "./push";
 
 import Login from "./pages/LoginPage/LoginPage";
 import Home from "./pages/HomePage/HomePage";
@@ -79,16 +78,23 @@ const App: React.FC = () => {
     const pub = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
     if (!pub) return;
 
-    if (
+    const canSync =
       status === "succeeded" &&
       isAuthenticated &&
-      Notification.permission === "granted"
-    ) {
-      ensureSubscriptionSynced(pub).catch((e) =>
-        console.warn("Resync subscription failed:", e)
-      );
-    }
-  }, [status, isAuthenticated, import.meta.env.VITE_VAPID_PUBLIC_KEY]);
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted";
+
+    if (!canSync) return;
+
+    (async () => {
+      try {
+        const { ensureSubscriptionSynced } = await import("./push");
+        await ensureSubscriptionSynced(pub);
+      } catch (e) {
+        console.warn("Resync subscription failed:", e);
+      }
+    })();
+  }, [status, isAuthenticated]);
 
   return (
     <>
