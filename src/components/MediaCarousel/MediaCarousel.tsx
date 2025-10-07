@@ -9,6 +9,78 @@ import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import "./MediaCarousel.scss";
 
+// ---- Cloudinary helper ----
+function buildCloudinaryUrl(url: string, transforms: string): string {
+  if (!/res\.cloudinary\.com/.test(url)) return url;
+
+  const parts = url.split("/upload/");
+  if (parts.length !== 2) return url;
+
+  const base = parts[0];
+  const rest = parts[1];
+
+  const t = transforms.replace(/,+/g, ",");
+
+  return `${base}/upload/${t}/${rest}`;
+}
+
+type OptimizedImageProps = {
+  url: string;
+  alt: string;
+  context: "feed" | "gallery";
+  priority?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+};
+
+const OptimizedImage: React.FC<OptimizedImageProps> = ({
+  url,
+  alt,
+  context,
+  priority = false,
+  className,
+  style,
+}) => {
+  const isCloudinary = /res\.cloudinary\.com/.test(url);
+  const widths =
+    context === "feed" ? [400, 800, 1200] : [600, 1000, 1400, 2000];
+
+  const buildSrc = (w: number) => {
+    if (!isCloudinary) return url;
+    return context === "feed"
+      ? buildCloudinaryUrl(
+          url,
+          `f_auto,q_auto:good,dpr_auto,c_fill,w_${w},h_320`
+        )
+      : buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_${w}`);
+  };
+
+  const srcSet = widths.map((w) => `${buildSrc(w)} ${w}w`).join(", ");
+  const src = buildSrc(widths[Math.floor(widths.length / 2)]);
+  const sizes =
+    context === "feed" ? "(max-width: 520px) 100vw, 500px" : "100vw";
+
+  return (
+    <img
+      src={src}
+      srcSet={srcSet}
+      sizes={sizes}
+      alt={alt}
+      loading={priority ? "eager" : "lazy"}
+      decoding="async"
+      className={className}
+      style={{
+        display: "block",
+        width: "100%",
+        height: "100%",
+        objectFit: context === "feed" ? "cover" : "contain",
+        background: "#000",
+        ...style,
+      }}
+    />
+  );
+};
+
 const clamp = (v: number, min: number, max: number) =>
   Math.max(min, Math.min(max, v));
 
@@ -114,20 +186,20 @@ const PinchZoom = forwardRef<PinchZoomHandle, PinchZoomProps>(
     };
 
     const onWheel = (e: React.WheelEvent) => {
-      if (e.ctrlKey || true) {
-        e.preventDefault();
-        const delta = -e.deltaY;
-        const step = delta > 0 ? 0.1 : -0.1;
-        const next = clamp(scale + step, 1, maxScale);
-        setScale(next);
-        if (next === 1) {
-          setTx(0);
-          setTy(0);
-        } else {
-          const clamped = clampTranslate(tx, ty);
-          setTx(clamped.x);
-          setTy(clamped.y);
-        }
+      if (!e.ctrlKey && scale === 1) return;
+
+      e.preventDefault();
+      const delta = -e.deltaY;
+      const step = delta > 0 ? 0.1 : -0.1;
+      const next = clamp(scale + step, 1, maxScale);
+      setScale(next);
+      if (next === 1) {
+        setTx(0);
+        setTy(0);
+      } else {
+        const clamped = clampTranslate(tx, ty);
+        setTx(clamped.x);
+        setTy(clamped.y);
       }
     };
 
@@ -149,12 +221,17 @@ const PinchZoom = forwardRef<PinchZoomHandle, PinchZoomProps>(
         onDoubleClick={onDoubleClick}
         style={{ touchAction: scale > 1 ? "none" : "pan-y" }}
       >
-        <img
-          src={src}
+        <OptimizedImage
+          url={src}
           alt={alt}
-          className="pz-media"
-          draggable={false}
-          style={{ transform: `translate(${tx}px, ${ty}px) scale(${scale})` }}
+          context="gallery"
+          priority={false}
+          style={{
+            transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
+            transformOrigin: "center center",
+            willChange: "transform",
+            touchAction: scale > 1 ? "none" : "pan-y",
+          }}
         />
         {scale > 1 && (
           <button
@@ -375,11 +452,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                 )
               ) : (
                 <div className="image-wrapper">
-                  <img
-                    src={item.url}
+                  <OptimizedImage
+                    url={item.url}
                     alt={`media-${index}`}
-                    className="post-media"
-                    draggable={false}
+                    context="feed"
+                    priority={index === 0}
                   />
                   <div className="image-actions">
                     <button
