@@ -15,7 +15,7 @@ import ProfileEditForm from "../../components/ProfileEditForm/ProfileEditForm";
 import {
   closePostForm,
   closeProfileEdit,
-  toggleSearchForm,
+  closeSearchForm,
 } from "../../redux/uiSlice";
 import SearchForm from "../../components/SearchForm/SearchForm";
 
@@ -39,8 +39,13 @@ const Home: React.FC = () => {
   const [startY, setStartY] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const prevOpen = useRef({
+    search: false,
+    post: false,
+    profile: false,
+  });
+
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Prüfen ob Logo sichtbar ist
     const logo = logoRef.current;
     if (!logo) return;
 
@@ -60,7 +65,7 @@ const Home: React.FC = () => {
 
     if (distance > 80) {
       triggerRefresh();
-      setStartY(null); // verhindern von mehrfach-Trigger
+      setStartY(null);
     }
   };
 
@@ -94,6 +99,31 @@ const Home: React.FC = () => {
       dispatch(fetchPostsAsync(1));
     }
   }, [dispatch, posts.length, currentPage, loading]);
+
+  useEffect(() => {
+    let opened: "search" | "post" | "profile" | null = null;
+
+    if (!prevOpen.current.search && isSearchFormOpen) opened = "search";
+    else if (!prevOpen.current.post && isPostFormOpen) opened = "post";
+    else if (!prevOpen.current.profile && isProfileEditOpen) opened = "profile";
+
+    if (opened === "search") {
+      if (isPostFormOpen) dispatch(closePostForm());
+      if (isProfileEditOpen) dispatch(closeProfileEdit());
+    } else if (opened === "post") {
+      if (isSearchFormOpen) dispatch(closeSearchForm());
+      if (isProfileEditOpen) dispatch(closeProfileEdit());
+    } else if (opened === "profile") {
+      if (isSearchFormOpen) dispatch(closeSearchForm());
+      if (isPostFormOpen) dispatch(closePostForm());
+    }
+
+    prevOpen.current = {
+      search: isSearchFormOpen,
+      post: isPostFormOpen,
+      profile: isProfileEditOpen,
+    };
+  }, [isSearchFormOpen, isPostFormOpen, isProfileEditOpen, dispatch]);
 
   const handleSearch = async (query: string) => {
     try {
@@ -179,7 +209,10 @@ const Home: React.FC = () => {
 
       {isPostFormOpen && (
         <>
-          <div className="blur-overlay" />
+          <div
+            className="blur-overlay"
+            onClick={() => dispatch(closePostForm())}
+          />
           <PostCreateForm
             onClose={() => dispatch(closePostForm())}
             triggerRef={postButtonRef as React.RefObject<HTMLElement>}
@@ -189,7 +222,10 @@ const Home: React.FC = () => {
 
       {isProfileEditOpen && (
         <>
-          <div className="blur-overlay" />
+          <div
+            className="blur-overlay"
+            onClick={() => dispatch(closeProfileEdit())}
+          />
           <ProfileEditForm
             onClose={() => dispatch(closeProfileEdit())}
             triggerRef={profileButtonRef}
@@ -199,9 +235,12 @@ const Home: React.FC = () => {
 
       {isSearchFormOpen && (
         <>
-          <div className="blur-overlay" />
+          <div
+            className="blur-overlay"
+            onClick={() => dispatch(closeSearchForm())}
+          />
           <SearchForm
-            onClose={() => dispatch(toggleSearchForm())}
+            onClose={() => dispatch(closeSearchForm())}
             onSearch={handleSearch}
           />
         </>
