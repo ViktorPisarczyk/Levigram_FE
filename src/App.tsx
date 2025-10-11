@@ -20,7 +20,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   if (status === "loading") {
     return <div className="loading-screen">Loading authentication...</div>;
   }
-
   return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
@@ -29,16 +28,14 @@ const App: React.FC = () => {
   const location = useLocation();
 
   const { darkMode } = useAppSelector((state) => state.theme);
-  const { user, isAuthenticated, status } = useAppSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticated, status } = useAppSelector((state) => state.auth);
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
 
+  // Auth + Theme
   useEffect(() => {
     dispatch(checkAuthAsync());
-
     const storedDarkMode = localStorage.getItem("darkMode");
     if (storedDarkMode !== null) {
       dispatch(setDarkMode(JSON.parse(storedDarkMode)));
@@ -54,13 +51,13 @@ const App: React.FC = () => {
     document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
   }, [darkMode, location.pathname]);
 
+  // PWA Install prompt
   useEffect(() => {
     const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallButton(true);
     };
-
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
@@ -68,12 +65,13 @@ const App: React.FC = () => {
   const handleInstallClick = () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResult: any) => {
+    deferredPrompt.userChoice.finally(() => {
       setDeferredPrompt(null);
       setShowInstallButton(false);
     });
   };
 
+  // Push subscription resync
   useEffect(() => {
     const pub = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
     if (!pub) return;
@@ -96,36 +94,50 @@ const App: React.FC = () => {
     })();
   }, [status, isAuthenticated]);
 
+  // Keyboard handling (mobile)
   useEffect(() => {
     const root = document.documentElement;
+    const vv = (window as any).visualViewport as VisualViewport | undefined;
 
-    const onIn = (e: FocusEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (!t) return;
-      const isField =
-        t.tagName === "INPUT" ||
-        t.tagName === "TEXTAREA" ||
-        t.isContentEditable;
-      if (isField) root.classList.add("kb-open");
+    const onVVChange = () => {
+      if (!vv) return;
+      const offset = Math.max(0, window.innerHeight - vv.height);
+      root.style.setProperty("--kb-offset", `${Math.round(offset)}px`);
+      if (offset > 0) root.classList.add("kb-open-any");
+      else {
+        root.classList.remove("kb-open-any");
+        root.classList.remove("kb-open-search");
+      }
     };
 
-    const onOut = () => {
+    vv?.addEventListener("resize", onVVChange);
+    vv?.addEventListener("scroll", onVVChange);
+    onVVChange();
+
+    const onFocusIn = (e: Event) => {
+      const t = e.target as Element | null;
+      const inSearch = !!t?.closest?.(".search-form");
+      root.classList.toggle("kb-open-search", inSearch);
+    };
+    const onFocusOut = () => {
       setTimeout(() => {
-        const a = document.activeElement as HTMLElement | null;
-        const stillField =
-          a &&
-          (a.tagName === "INPUT" ||
-            a.tagName === "TEXTAREA" ||
-            a.isContentEditable);
-        if (!stillField) root.classList.remove("kb-open");
-      }, 50);
+        const active = document.activeElement as Element | null;
+        const inSearch = !!active?.closest?.(".search-form");
+        root.classList.toggle("kb-open-search", inSearch);
+      }, 0);
     };
 
-    window.addEventListener("focusin", onIn);
-    window.addEventListener("focusout", onOut);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+
     return () => {
-      window.removeEventListener("focusin", onIn);
-      window.removeEventListener("focusout", onOut);
+      vv?.removeEventListener("resize", onVVChange);
+      vv?.removeEventListener("scroll", onVVChange);
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+      root.classList.remove("kb-open-any");
+      root.classList.remove("kb-open-search");
+      root.style.removeProperty("--kb-offset");
     };
   }, []);
 

@@ -44,3 +44,19 @@
     font-size: 40px;
   }
 }
+
+html.kb-open-any .bottom-nav {
+  padding-bottom: 0;
+}
+
+html.kb-open-search .bottom-nav {
+  transform: translateY(100%);
+}
+
+html.kb-open-search .search-form {
+  bottom: var(--kb-offset, 0);
+}
+
+.bottom-nav {
+  transition: transform 0.2s ease;
+}
