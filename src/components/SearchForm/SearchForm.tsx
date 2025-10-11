@@ -13,31 +13,32 @@ const SearchForm: React.FC<SearchFormProps> = ({ onClose, onSearch }) => {
   const formRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useClickOutside(formRef, () => {
-    onClose();
-  });
+  useClickOutside(formRef, () => onClose());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      onSearch(query.trim());
-      onClose();
-    }
+    if (!query.trim()) return;
+    onSearch(query.trim());
+    onClose();
   };
 
   useEffect(() => {
+    const root = document.documentElement;
+    const el = inputRef.current;
+    if (!el) return;
+
+    const onFocus = () => root.classList.add("kb-open");
+    const onBlur = () => root.classList.remove("kb-open");
+
+    el.addEventListener("focus", onFocus);
+    el.addEventListener("blur", onBlur);
+
     return () => {
-      document.documentElement.classList.remove("kb-open");
+      el.removeEventListener("focus", onFocus);
+      el.removeEventListener("blur", onBlur);
+      root.classList.remove("kb-open");
     };
   }, []);
-
-  const handleFocus = () => {
-    document.documentElement.classList.add("kb-open");
-  };
-
-  const handleBlur = () => {
-    document.documentElement.classList.remove("kb-open");
-  };
 
   return (
     <div ref={formRef} className="search-form">
@@ -47,8 +48,6 @@ const SearchForm: React.FC<SearchFormProps> = ({ onClose, onSearch }) => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
           placeholder="Suchen..."
         />
         <button type="submit" className="search-button">
