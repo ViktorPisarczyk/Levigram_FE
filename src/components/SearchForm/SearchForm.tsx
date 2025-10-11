@@ -26,30 +26,32 @@ const SearchForm: React.FC<SearchFormProps> = ({ onClose, onSearch }) => {
   };
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.add("kb-open");
-    const t = setTimeout(() => inputRef.current?.focus(), 0);
     return () => {
-      clearTimeout(t);
-      root.classList.remove("kb-open");
+      document.documentElement.classList.remove("kb-open");
     };
   }, []);
 
+  const handleFocus = () => {
+    document.documentElement.classList.add("kb-open");
+  };
+
+  const handleBlur = () => {
+    document.documentElement.classList.remove("kb-open");
+  };
+
   return (
-    <div ref={formRef} className="search-form" role="dialog" aria-modal="true">
+    <div ref={formRef} className="search-form">
       <form onSubmit={handleSubmit} className="form-content">
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder="Suchen..."
-          inputMode="search"
-          autoCapitalize="none"
-          autoCorrect="off"
-          autoComplete="off"
         />
-        <button type="submit" className="search-button" aria-label="Suchen">
+        <button type="submit" className="search-button">
           <IoMdSearch size={20} />
         </button>
       </form>
