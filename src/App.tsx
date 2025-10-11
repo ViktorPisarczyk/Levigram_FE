@@ -96,6 +96,39 @@ const App: React.FC = () => {
     })();
   }, [status, isAuthenticated]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const onIn = (e: FocusEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      const isField =
+        t.tagName === "INPUT" ||
+        t.tagName === "TEXTAREA" ||
+        t.isContentEditable;
+      if (isField) root.classList.add("kb-open");
+    };
+
+    const onOut = () => {
+      setTimeout(() => {
+        const a = document.activeElement as HTMLElement | null;
+        const stillField =
+          a &&
+          (a.tagName === "INPUT" ||
+            a.tagName === "TEXTAREA" ||
+            a.isContentEditable);
+        if (!stillField) root.classList.remove("kb-open");
+      }, 50);
+    };
+
+    window.addEventListener("focusin", onIn);
+    window.addEventListener("focusout", onOut);
+    return () => {
+      window.removeEventListener("focusin", onIn);
+      window.removeEventListener("focusout", onOut);
+    };
+  }, []);
+
   return (
     <>
       <Toaster
