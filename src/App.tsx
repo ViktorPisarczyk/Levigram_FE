@@ -114,16 +114,43 @@ const App: React.FC = () => {
     vv?.addEventListener("scroll", onVVChange);
     onVVChange();
 
+    let lastDockedEl: Element | null = null;
+    const DOCK_SELECTOR =
+      ".search-form, .post-create-form, .profile-edit-form, .comment-form, [data-dock-on-kb]";
+
     const onFocusIn = (e: Event) => {
       const t = e.target as Element | null;
-      const inSearch = !!t?.closest?.(".search-form");
+      if (!t) return;
+
+      const inSearch = !!t.closest(".search-form");
       root.classList.toggle("kb-open-search", inSearch);
+
+      const dock = t.closest(DOCK_SELECTOR);
+      if (lastDockedEl && lastDockedEl !== dock) {
+        lastDockedEl.classList.remove("dock-at-kb");
+        lastDockedEl = null;
+      }
+      if (dock) {
+        dock.classList.add("dock-at-kb");
+        lastDockedEl = dock;
+      }
     };
+
     const onFocusOut = () => {
       setTimeout(() => {
         const active = document.activeElement as Element | null;
         const inSearch = !!active?.closest?.(".search-form");
         root.classList.toggle("kb-open-search", inSearch);
+
+        const stillField =
+          !!active &&
+          (active.tagName === "INPUT" ||
+            active.tagName === "TEXTAREA" ||
+            (active as HTMLElement).isContentEditable);
+        if (!stillField && lastDockedEl) {
+          lastDockedEl.classList.remove("dock-at-kb");
+          lastDockedEl = null;
+        }
       }, 0);
     };
 

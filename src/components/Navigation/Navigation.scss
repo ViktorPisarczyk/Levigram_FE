@@ -9,11 +9,14 @@
   background-color: var(--navigation);
   border-top: 1px solid var(--nav-border);
   box-shadow: var(--nav-shadow);
-  padding: 6px 0 calc(env(safe-area-inset-bottom) - 14px) 0;
+  /* normal: etwas Padding + Safe-Area (leicht reduziert) */
+  padding: 6px 0 max(0px, calc(env(safe-area-inset-bottom) - 14px)) 0;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
+  transition: transform 0.2s ease;
+  will-change: transform;
 }
 
 .nav-button {
@@ -45,18 +48,24 @@
   }
 }
 
+/* Tastatur offen: Nav komplett ausblenden + Safe-Area-Padding entfernen */
 html.kb-open-any .bottom-nav {
   padding-bottom: 0;
-}
-
-html.kb-open-search .bottom-nav {
   transform: translateY(100%);
 }
 
-html.kb-open-search .search-form {
-  bottom: var(--kb-offset, 0);
+/* Panels, die an die Tastatur andocken sollen */
+.dock-at-kb {
+  bottom: var(--kb-offset, 0) !important;
 }
 
-.bottom-nav {
-  transition: transform 0.2s ease;
+/* Optional: Progressive Enhancement ohne JS-Klasse, falls :has() verfügbar */
+@supports selector(:has(*)) {
+  .search-form:has(:focus),
+  .post-create-form:has(:focus),
+  .profile-edit-form:has(:focus),
+  .comment-sheet:has(:focus),
+  [data-dock-on-kb]:has(:focus) {
+    bottom: var(--kb-offset, 0) !important;
+  }
 }
