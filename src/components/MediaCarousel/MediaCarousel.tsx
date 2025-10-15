@@ -6,23 +6,10 @@ import React, {
   useImperativeHandle,
   memo,
 } from "react";
+import { buildCloudinaryUrl } from "../../cloudinary";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import "./MediaCarousel.scss";
-
-/* ----------------------------------------
-   Cloudinary helper
----------------------------------------- */
-function buildCloudinaryUrl(url: string, transforms: string): string {
-  if (!/res\.cloudinary\.com/.test(url)) return url;
-  const parts = url.split("/upload/");
-  if (parts.length !== 2) return url;
-  const base = parts[0];
-  const rest = parts[1];
-  // Mehrere Kommas vermeiden (falls zusammengebaut)
-  const t = transforms.replace(/,+/g, ",");
-  return `${base}/upload/${t}/${rest}`;
-}
 
 /* ----------------------------------------
    OptimizedImage – mobile first
@@ -33,7 +20,7 @@ type ImgContext = "feed" | "gallery";
 type OptimizedImageProps = {
   url: string;
   alt: string;
-  context: ImgContext;
+  context: "feed" | "gallery";
   priority?: boolean;
   className?: string;
   style?: React.CSSProperties;
@@ -43,7 +30,7 @@ const FEED_W = 500;
 const FEED_H = 360;
 const GALLERY_W = 1200;
 
-const OptimizedImage = memo(function OptimizedImage({
+export const OptimizedImage = memo(function OptimizedImage({
   url,
   alt,
   context,
@@ -53,7 +40,6 @@ const OptimizedImage = memo(function OptimizedImage({
 }: OptimizedImageProps) {
   const isCloudinary = /res\.cloudinary\.com/.test(url);
 
-  // 1 Request im Feed reicht (wir kennen die Zielgröße exakt)
   const feedSrc = isCloudinary
     ? buildCloudinaryUrl(
         url,
@@ -61,15 +47,14 @@ const OptimizedImage = memo(function OptimizedImage({
       )
     : url;
 
-  // In der Gallery: capped Breite (contain)
-  // 2 Stufen sind ausreichend (schlankes srcset)
   const gallerySrc = isCloudinary
     ? buildCloudinaryUrl(
         url,
         `f_auto,q_auto:good,dpr_auto,c_limit,w_${GALLERY_W}`
       )
     : url;
-  const gallerySrcset = isCloudinary
+
+  const gallerySrcSet = isCloudinary
     ? [
         buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_900`) +
           " 900w",
@@ -78,11 +63,14 @@ const OptimizedImage = memo(function OptimizedImage({
       ].join(", ")
     : undefined;
 
-  const common = {
+  const common: Omit<
+    React.ImgHTMLAttributes<HTMLImageElement>,
+    "src" | "srcSet" | "sizes"
+  > = {
     alt,
     loading: priority ? "eager" : "lazy",
-    decoding: "async" as const,
-    fetchpriority: priority ? ("high" as const) : ("low" as const),
+    decoding: "async",
+    fetchPriority: priority ? "high" : "low",
     className,
     style: {
       display: "block",
@@ -92,7 +80,7 @@ const OptimizedImage = memo(function OptimizedImage({
       background: "#000",
       ...style,
     },
-    onError: (e: React.SyntheticEvent<HTMLImageElement>) => {
+    onError: (e) => {
       const el = e.currentTarget;
       el.onerror = null;
       const split = el.src.split("/upload/");
@@ -108,9 +96,8 @@ const OptimizedImage = memo(function OptimizedImage({
     return <img src={feedSrc} {...common} />;
   }
 
-  // gallery
   return (
-    <img src={gallerySrc} srcSet={gallerySrcset} sizes="100vw" {...common} />
+    <img src={gallerySrc} srcSet={gallerySrcSet} sizes="100vw" {...common} />
   );
 });
 

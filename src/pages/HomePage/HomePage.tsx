@@ -22,6 +22,14 @@ const Home: React.FC = () => {
     (s: RootState) => s.ui
   );
 
+  // Refs für Navigation (Pflicht-Props)
+  const postButtonRef = useRef<HTMLButtonElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Logo / Scroll
+  const scrollTopRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+
   // Paging & Aggregation
   const [page, setPage] = useState(1);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -78,6 +86,9 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-page">
+      <div ref={scrollTopRef} />
+      <div ref={logoRef} className="logo" />
+
       {/* Feed */}
       <div className="post-feed">
         {currentList.map((post, idx) => {
@@ -95,10 +106,12 @@ const Home: React.FC = () => {
       </div>
 
       <Navigation
+        postButtonRef={postButtonRef}
+        profileButtonRef={profileButtonRef}
         onHomeClick={() => {
           setSearchActive(false);
           setSearchItems([]);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          scrollTopRef.current?.scrollIntoView({ behavior: "smooth" });
         }}
         onToggleDarkMode={() => {
           document.body.classList.toggle("dark");

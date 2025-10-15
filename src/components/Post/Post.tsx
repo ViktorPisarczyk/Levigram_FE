@@ -20,6 +20,7 @@ import { IoMdSend } from "react-icons/io";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import defaultAvatar from "../../assets/images/defaultAvatar.png";
+import Avatar from "../Avatar/Avatar";
 import "./Post.scss";
 import MediaCarousel from "../MediaCarousel/MediaCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
@@ -340,7 +341,7 @@ const PostComponent: FC<PostComponentProps> = ({ post }) => {
     <div className="post-container">
       <div className="post-header">
         <div className="author-info">
-          <img src={avatar} alt="profile" className="profile-pic" />
+          <Avatar src={avatar} alt={displayName} size={40} />
           <div className="author-text">
             <strong>{displayName}</strong>
             <small>{formatDate(post.createdAt)}</small>
@@ -492,11 +493,13 @@ const PostComponent: FC<PostComponentProps> = ({ post }) => {
           <ul className="likes-list">
             {likers.map((u) => (
               <li key={u._id} className="likes-item">
-                <img
-                  className="likes-avatar"
+                <Avatar
                   src={u.profilePicture || defaultAvatar}
                   alt={u.username}
+                  size="sm"
+                  className="likes-avatar"
                 />
+
                 <span className="likes-name">{u.username}</span>
               </li>
             ))}
