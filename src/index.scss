@@ -20,6 +20,7 @@
   --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(170, 183, 196, 0.2);
   --background-image: url("./assets/images/istockphoto-887138350-612x612.jpg");
   --background-size: auto;
+  --kb-offset: 0px;
 }
 
 [data-theme="dark"] {
@@ -71,4 +72,21 @@ select {
 
 button {
   cursor: pointer;
+}
+
+html.kb-open-any .dock-at-kb {
+  bottom: var(--kb-offset, 0) !important; /* andock direkt über Tastatur */
+}
+
+html.kb-open-any .hide-when-kb {
+  transform: translateY(100%);
+}
+
+/* sanftere Motion */
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav,
+  .post-create-form,
+  .post-edit-form {
+    transition: none !important;
+  }
 }

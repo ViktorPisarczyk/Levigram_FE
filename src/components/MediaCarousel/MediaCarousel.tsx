@@ -4,80 +4,119 @@ import React, {
   useRef,
   forwardRef,
   useImperativeHandle,
+  memo,
 } from "react";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import "./MediaCarousel.scss";
 
-// ---- Cloudinary helper ----
+/* ----------------------------------------
+   Cloudinary helper
+---------------------------------------- */
 function buildCloudinaryUrl(url: string, transforms: string): string {
   if (!/res\.cloudinary\.com/.test(url)) return url;
-
   const parts = url.split("/upload/");
   if (parts.length !== 2) return url;
-
   const base = parts[0];
   const rest = parts[1];
-
+  // Mehrere Kommas vermeiden (falls zusammengebaut)
   const t = transforms.replace(/,+/g, ",");
-
   return `${base}/upload/${t}/${rest}`;
 }
 
+/* ----------------------------------------
+   OptimizedImage – mobile first
+   - FEED: genau 500x360 (c_fill) – klein & konsistent
+   - GALLERY: max ~1200px (contain)
+---------------------------------------- */
+type ImgContext = "feed" | "gallery";
 type OptimizedImageProps = {
   url: string;
   alt: string;
-  context: "feed" | "gallery";
+  context: ImgContext;
   priority?: boolean;
   className?: string;
   style?: React.CSSProperties;
 };
 
-const OptimizedImage: React.FC<OptimizedImageProps> = ({
+const FEED_W = 500;
+const FEED_H = 360;
+const GALLERY_W = 1200;
+
+const OptimizedImage = memo(function OptimizedImage({
   url,
   alt,
   context,
   priority = false,
   className,
   style,
-}) => {
+}: OptimizedImageProps) {
   const isCloudinary = /res\.cloudinary\.com/.test(url);
-  const widths =
-    context === "feed" ? [400, 800, 1200] : [600, 1000, 1400, 2000];
 
-  const buildSrc = (w: number) => {
-    if (!isCloudinary) return url;
-    return context === "feed"
-      ? buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_${w}`)
-      : buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_${w}`);
+  // 1 Request im Feed reicht (wir kennen die Zielgröße exakt)
+  const feedSrc = isCloudinary
+    ? buildCloudinaryUrl(
+        url,
+        `f_auto,q_auto:eco,dpr_auto,c_fill,w_${FEED_W},h_${FEED_H}`
+      )
+    : url;
+
+  // In der Gallery: capped Breite (contain)
+  // 2 Stufen sind ausreichend (schlankes srcset)
+  const gallerySrc = isCloudinary
+    ? buildCloudinaryUrl(
+        url,
+        `f_auto,q_auto:good,dpr_auto,c_limit,w_${GALLERY_W}`
+      )
+    : url;
+  const gallerySrcset = isCloudinary
+    ? [
+        buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_900`) +
+          " 900w",
+        buildCloudinaryUrl(url, `f_auto,q_auto:good,dpr_auto,c_limit,w_1200`) +
+          " 1200w",
+      ].join(", ")
+    : undefined;
+
+  const common = {
+    alt,
+    loading: priority ? "eager" : "lazy",
+    decoding: "async" as const,
+    fetchpriority: priority ? ("high" as const) : ("low" as const),
+    className,
+    style: {
+      display: "block",
+      width: "100%",
+      height: "100%",
+      objectFit: context === "feed" ? "cover" : "contain",
+      background: "#000",
+      ...style,
+    },
+    onError: (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const el = e.currentTarget;
+      el.onerror = null;
+      const split = el.src.split("/upload/");
+      if (split.length === 2) {
+        el.src = `${split[0]}/upload/${split[1].replace(/^([^/]+)\/+/, "")}`;
+      } else {
+        el.src = "/placeholder.jpg";
+      }
+    },
   };
 
-  const srcSet = widths.map((w) => `${buildSrc(w)} ${w}w`).join(", ");
-  const src = buildSrc(widths[Math.floor(widths.length / 2)]);
-  const sizes =
-    context === "feed" ? "(max-width: 520px) 100vw, 500px" : "100vw";
+  if (context === "feed") {
+    return <img src={feedSrc} {...common} />;
+  }
 
+  // gallery
   return (
-    <img
-      src={src}
-      srcSet={srcSet}
-      sizes={sizes}
-      alt={alt}
-      loading={priority ? "eager" : "lazy"}
-      decoding="async"
-      className={className}
-      style={{
-        display: "block",
-        width: "100%",
-        height: "100%",
-        objectFit: context === "feed" ? "cover" : "contain",
-        background: "#000",
-        ...style,
-      }}
-    />
+    <img src={gallerySrc} srcSet={gallerySrcset} sizes="100vw" {...common} />
   );
-};
+});
 
+/* ----------------------------------------
+   PinchZoom für Gallery (unverändert performant)
+---------------------------------------- */
 const clamp = (v: number, min: number, max: number) =>
   Math.max(min, Math.min(max, v));
 
@@ -115,11 +154,10 @@ const PinchZoom = forwardRef<PinchZoomHandle, PinchZoomProps>(
       setTy(0);
     };
 
-    useImperativeHandle(ref, () => ({ reset }), [reset]);
+    useImperativeHandle(ref, () => ({ reset }), []);
 
     const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
       if (scale > 1) e.stopPropagation();
-
       (e.target as Element).setPointerCapture?.(e.pointerId);
       pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pointers.current.size === 1) {
@@ -174,17 +212,12 @@ const PinchZoom = forwardRef<PinchZoomHandle, PinchZoomProps>(
 
     const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
       pointers.current.delete(e.pointerId);
-      if (pointers.current.size < 2) {
-        startDist.current = null;
-      }
-      if (pointers.current.size === 0) {
-        lastPos.current = null;
-      }
+      if (pointers.current.size < 2) startDist.current = null;
+      if (pointers.current.size === 0) lastPos.current = null;
     };
 
     const onWheel = (e: React.WheelEvent) => {
       if (!e.ctrlKey && scale === 1) return;
-
       e.preventDefault();
       const delta = -e.deltaY;
       const step = delta > 0 ? 0.1 : -0.1;
@@ -235,7 +268,6 @@ const PinchZoom = forwardRef<PinchZoomHandle, PinchZoomProps>(
             className="pz-reset"
             onClick={reset}
             aria-label="Zoom zurücksetzen"
-            title="Zurücksetzen"
           >
             Reset
           </button>
@@ -246,6 +278,9 @@ const PinchZoom = forwardRef<PinchZoomHandle, PinchZoomProps>(
 );
 PinchZoom.displayName = "PinchZoom";
 
+/* ----------------------------------------
+   Component
+---------------------------------------- */
 interface MediaItem {
   url: string;
   poster?: string;
@@ -270,6 +305,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
 
   const pinchRefs = useRef<(PinchZoomHandle | null)[]>([]);
 
+  // Keen slider (Feed)
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
     mode: "snap",
@@ -277,62 +313,61 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     slideChanged: (slider) => setCurrentSlide(slider.track.details.rel),
   });
 
+  // Video-Poster klein halten (Bandbreite!)
   useEffect(() => {
     media.forEach((item) => {
       const isVideo = item.url.match(/\.(mp4|mov|webm|ogg)$/i);
       if (isVideo && !item.poster && !generatedPosters[item.url]) {
         const video = document.createElement("video");
         video.src = item.url;
-        video.crossOrigin = "anonymous";
         video.preload = "metadata";
+        video.muted = true;
+        video.playsInline = true;
 
-        video.addEventListener(
-          "loadeddata",
-          () => {
-            try {
-              const canvas = document.createElement("canvas");
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
-              const ctx = canvas.getContext("2d");
-              if (ctx) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const dataURL = canvas.toDataURL("image/jpeg");
-                setGeneratedPosters((prev) => ({
-                  ...prev,
-                  [item.url]: dataURL,
-                }));
-              }
-            } catch (err) {
-              console.error("Poster generation error:", err);
+        const onLoaded = () => {
+          try {
+            const vw = video.videoWidth || 1280;
+            const vh = video.videoHeight || 720;
+            const max = 720;
+            const ratio = vw / vh;
+            const w = vw > vh ? max : Math.round(max * ratio);
+            const h = vw > vh ? Math.round(max / ratio) : max;
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, w, h);
+              const dataURL = canvas.toDataURL("image/webp", 0.6);
+              setGeneratedPosters((prev) => ({ ...prev, [item.url]: dataURL }));
             }
-          },
-          { once: true }
+          } catch (err) {
+            console.error("Poster generation error:", err);
+          }
+        };
+
+        video.addEventListener("loadeddata", onLoaded, { once: true });
+        video.addEventListener("error", () =>
+          console.error("❌ Fehler beim Laden des Videos für Poster", item.url)
         );
-
-        video.addEventListener("error", () => {
-          console.error("❌ Fehler beim Laden des Videos für Poster", item.url);
-        });
-
         video.load();
       }
     });
   }, [media, generatedPosters]);
 
+  // Autoplay nur wenn explizit gewählt
   useEffect(() => {
     if (playingIndex !== null) {
       const videoEl = videoRefs.current[playingIndex];
       if (videoEl) {
         videoEl
           .play()
-          .then(() => console.log("▶️ Autoplay erfolgreich"))
           .catch((err) => console.warn("⚠️ Autoplay blockiert", err));
       }
     }
   }, [playingIndex]);
 
-  const handlePlay = (index: number) => {
-    setPlayingIndex(index);
-  };
+  const handlePlay = (index: number) => setPlayingIndex(index);
 
   const openGallery = (index: number) => {
     setGalleryInitial(index);
@@ -351,6 +386,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     }
   }, [isGalleryOpen]);
 
+  // Keen slider (Gallery)
   const [galleryRef, galleryInstanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
     mode: "snap",
@@ -376,6 +412,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [isGalleryOpen, galleryInstanceRef]);
 
+  // Download helper
   const downloadImage = async (url: string, filename?: string) => {
     try {
       const res = await fetch(url, { credentials: "omit", mode: "cors" });
@@ -399,122 +436,136 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
 
   if (!media.length) return null;
 
+  // Nur aktuelle & Nachbarn wirklich rendern (Feed)
+  const shouldMountFeed = (idx: number) =>
+    Math.abs(idx - currentSlide) <= 1 && !isGalleryOpen;
+
+  // In Gallery nur aktuellen & Nachbarn montieren
+  const shouldMountGallery = (idx: number) => Math.abs(idx - galleryIndex) <= 1;
+
   return (
     <div className="media-carousel">
       <div ref={sliderRef} className="keen-slider">
         {media.map((item, index) => {
-          const isVideo = item.url.match(/\.(mp4|mov|webm|ogg)$/i);
+          const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(item.url);
           const poster = item.poster || generatedPosters[item.url];
 
           return (
             <div className="keen-slider__slide media-slide" key={index}>
-              {isVideo ? (
-                playingIndex === index ? (
-                  <video
-                    ref={(el) => {
-                      if (el) videoRefs.current[index] = el;
-                    }}
-                    src={item.url}
-                    poster={poster}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    crossOrigin="anonymous"
-                    className="post-media"
-                  />
-                ) : poster ? (
+              {shouldMountFeed(index) ? (
+                isVideo ? (
+                  // Video erst beim Klick laden (preload=none)
+                  playingIndex === index ? (
+                    <video
+                      ref={(el) => {
+                        if (el) videoRefs.current[index] = el;
+                      }}
+                      src={item.url}
+                      poster={poster}
+                      controls
+                      playsInline
+                      preload="none"
+                      className="post-media"
+                    />
+                  ) : poster ? (
+                    <div
+                      className="video-poster"
+                      style={{ backgroundImage: `url(${poster})` }}
+                      onClick={() => handlePlay(index)}
+                    >
+                      <div className="play-button">
+                        <svg
+                          viewBox="0 0 100 100"
+                          className="play-icon"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="48"
+                            fill="rgba(0,0,0,0.5)"
+                          />
+                          <polygon points="40,30 70,50 40,70" fill="white" />
+                        </svg>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="video-loading">Generating preview...</div>
+                  )
+                ) : (
                   <div
-                    className="video-poster"
-                    style={{ backgroundImage: `url(${poster})` }}
-                    onClick={() => handlePlay(index)}
+                    className="image-wrapper"
+                    onClick={() => openGallery(index)}
                   >
-                    <div className="play-button">
-                      <svg
-                        viewBox="0 0 100 100"
-                        className="play-icon"
-                        xmlns="http://www.w3.org/2000/svg"
+                    <OptimizedImage
+                      url={item.url}
+                      alt={`media-${index}`}
+                      context="feed"
+                      priority={index === 0}
+                    />
+                    <div
+                      className="image-actions"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        onClick={() => {
+                          const base = `levigram-${index + 1}`;
+                          const ext = (
+                            item.url.split(".").pop() || "jpg"
+                          ).split("?")[0];
+                          downloadImage(item.url, `${base}.${ext}`);
+                        }}
+                        aria-label="Bild herunterladen"
+                        title="Download"
                       >
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="48"
-                          fill="rgba(0, 0, 0, 0.5)"
-                        />
-                        <polygon points="40,30 70,50 40,70" fill="white" />
-                      </svg>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        onClick={() => openGallery(index)}
+                        aria-label="Bild im Vollbild anzeigen"
+                        title="Vollbild"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="21" y1="3" x2="14" y2="10"></line>
+                          <polyline points="9 21 3 21 3 15"></polyline>
+                          <line x1="3" y1="21" x2="10" y2="14"></line>
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                ) : (
-                  <div className="video-loading">Generating preview...</div>
                 )
               ) : (
-                <div className="image-wrapper">
-                  <OptimizedImage
-                    url={item.url}
-                    alt={`media-${index}`}
-                    context="feed"
-                    priority={index === 0}
-                  />
-                  <div className="image-actions">
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const base = `levigram-${index + 1}`;
-                        const ext = (item.url.split(".").pop() || "jpg").split(
-                          "?"
-                        )[0];
-                        downloadImage(item.url, `${base}.${ext}`);
-                      }}
-                      aria-label="Bild herunterladen"
-                      title="Download"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openGallery(index);
-                      }}
-                      aria-label="Bild im Vollbild anzeigen"
-                      title="Vollbild"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="15 3 21 3 21 9"></polyline>
-                        <line x1="21" y1="3" x2="14" y2="10"></line>
-                        <polyline points="9 21 3 21 3 15"></polyline>
-                        <line x1="3" y1="21" x2="10" y2="14"></line>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                // Placeholder statt offscreen Media
+                <div className="media-skeleton" />
               )}
             </div>
           );
@@ -528,23 +579,28 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
               key={idx}
               onClick={() => instanceRef.current?.moveToIdx(idx)}
               className={currentSlide === idx ? "dot active" : "dot"}
+              aria-label={`Slide ${idx + 1}`}
             />
           ))}
         </div>
       )}
 
+      {/* GALLERY (Full View) */}
       {isGalleryOpen && (
         <div className="gallery-modal" role="dialog" aria-modal="true">
           <div ref={galleryRef} className="keen-slider gallery-slider">
             {media.map((item, idx) => {
-              const isVideo = item.url.match(/\.(mp4|mov|webm|ogg)$/i);
+              const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(item.url);
+              const mount = shouldMountGallery(idx);
               return (
                 <div
                   className="keen-slider__slide gallery-slide"
                   key={`g-${idx}`}
                 >
                   <div className="gallery-frame">
-                    {isVideo ? (
+                    {!mount ? (
+                      <div className="media-skeleton" />
+                    ) : isVideo ? (
                       <video
                         src={item.url}
                         poster={item.poster || generatedPosters[item.url]}
@@ -584,14 +640,13 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              aria-hidden="true"
             >
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
 
-          {!media[galleryIndex].url.match(/\.(mp4|mov|webm|ogg)$/i) && (
+          {!/\.(mp4|mov|webm|ogg)$/i.test(media[galleryIndex].url) && (
             <button
               className="gallery-download"
               onClick={() => {
@@ -613,7 +668,6 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                aria-hidden="true"
               >
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>

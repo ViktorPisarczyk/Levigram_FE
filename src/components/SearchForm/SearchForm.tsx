@@ -41,7 +41,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ onClose, onSearch }) => {
   }, []);
 
   return (
-    <div ref={formRef} className="search-form">
+    <div ref={formRef} className="search-form dock-at-kb">
       <form onSubmit={handleSubmit} className="form-content">
         <input
           ref={inputRef}

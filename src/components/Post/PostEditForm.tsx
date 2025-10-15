@@ -1,11 +1,11 @@
 import React, { useState, useRef } from "react";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../redux/store";
-import { editPostAsync, fetchCommentsByPostId, Post } from "./postSlice";
 import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import heic2any from "heic2any";
 import "./PostEditForm.scss";
+
+import type { Post } from "../../types/models";
+import { useEditPostMutation } from "../../redux/apiSlice";
 
 interface MediaFile {
   url: string;
@@ -19,7 +19,8 @@ interface PostEditFormProps {
 }
 
 const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
-  const dispatch = useDispatch<AppDispatch>();
+  const [editPost, { isLoading: isSaving }] = useEditPostMutation();
+
   const [content, setContent] = useState(post.content);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>(
     post.media.map((item) => ({ url: item.url, poster: item.poster }))
@@ -28,7 +29,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   const formRef = useRef<HTMLFormElement>(null);
 
   useClickOutside(formRef, () => {
-    if (!uploading) onCancel();
+    if (!uploading && !isSaving) onCancel();
   });
 
   const generatePoster = (url: string): Promise<string | undefined> => {
@@ -81,10 +82,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
 
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
+      { method: "POST", body: formData }
     );
 
     const data = await res.json();
@@ -108,10 +106,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
 
         const res = await fetch(
           `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
+          { method: "POST", body: formData }
         );
 
         const data = await res.json();
@@ -127,10 +122,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
           }
         }
 
-        return {
-          url: data.secure_url,
-          poster: finalPoster,
-        };
+        return { url: data.secure_url, poster: finalPoster };
       })
     );
 
@@ -192,15 +184,12 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
       const uploads = await uploadMediaFiles(newMedia);
       const finalMedia = [...existingMedia, ...uploads];
 
-      await dispatch(
-        editPostAsync({
-          postId: post._id,
-          content,
-          media: finalMedia,
-        })
-      ).unwrap();
+      await editPost({
+        postId: post._id,
+        content,
+        media: finalMedia,
+      }).unwrap();
 
-      await dispatch(fetchCommentsByPostId(post._id));
       onCancel();
     } catch (err) {
       console.error("Error updating post:", err);
@@ -210,7 +199,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   };
 
   return (
-    <div className="post-edit-form">
+    <div className="post-edit-form dock-at-kb">
       <form ref={formRef} onSubmit={handleSubmit}>
         <div className="form-content">
           <textarea
@@ -223,22 +212,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
             <div className="media-preview-wrapper">
               <MediaPreviewCarousel
                 mediaFiles={mediaFiles}
-                onRemove={(index) => {
-                  setMediaFiles((prev) => {
-                    const updated = prev.filter((_, i) => i !== index);
-                    if (index === mediaFiles.length - 1 && updated.length > 0) {
-                      setTimeout(() => {
-                        const slider = document.querySelector(".keen-slider");
-                        if (slider) {
-                          (slider as any).keenSlider?.moveToIdx(
-                            updated.length - 1
-                          );
-                        }
-                      }, 0);
-                    }
-                    return updated;
-                  });
-                }}
+                onRemove={handleRemoveMedia}
               />
             </div>
           )}
@@ -259,14 +233,14 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
             <button
               type="button"
               onClick={onCancel}
-              disabled={uploading}
+              disabled={uploading || isSaving}
               className="cancel-button"
             >
               Abbrechen
             </button>
             <button
               type="submit"
-              disabled={uploading}
+              disabled={uploading || isSaving}
               className="submit-button"
             >
               Speichern
@@ -274,7 +248,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
           </div>
         </div>
 
-        {uploading && (
+        {(uploading || isSaving) && (
           <div className="uploading-overlay">
             <div className="spinner" />
             <p className="loading-text">Beitrag wird aktualisiert...</p>

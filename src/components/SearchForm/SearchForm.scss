@@ -12,11 +12,23 @@
   border-radius: 0.5rem 0.5rem 0 0;
   z-index: 1000;
   color: var(--text);
+  transition: bottom 0.15s ease;
+  will-change: bottom;
+
+  max-height: calc(100dvh - 10px - env(safe-area-inset-top));
+  overscroll-behavior: contain;
 
   .form-content {
     display: flex;
     align-items: center;
     gap: 8px;
+
+    /* genug Abstand, wenn Safe-Area/Tastatur aktiv */
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+
+    html.kb-open-any & {
+      padding-bottom: calc(var(--kb-offset, 0px) + 8px);
+    }
 
     input[type="text"] {
       flex: 1;
@@ -50,17 +62,25 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        filter: saturate(0.7);
+      }
     }
   }
 }
 
-html.kb-open .bottom-nav {
+html.kb-open-any .bottom-nav {
   transform: translateY(100%);
 }
-html.kb-open .search-form {
-  bottom: 0;
+
+html.kb-open-any .search-form {
+  bottom: var(--kb-offset, 0); /* direkt über der Tastatur andocken */
 }
 
+/* sanftere Animationen */
 .bottom-nav {
   transition: transform 0.2s ease;
 }

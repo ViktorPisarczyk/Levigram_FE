@@ -15,15 +15,27 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: bottom 0.15s ease;
+
+  max-height: calc(100dvh - 10px - env(safe-area-inset-top));
+  overscroll-behavior: contain;
 
   .form-content {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 14px;
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
+
+    html.kb-open-any & {
+      padding-bottom: calc(var(--kb-offset, 0px) + 12px);
+    }
   }
+
   .media-preview-wrapper {
     width: 100%;
     max-width: 300px;
@@ -77,7 +89,6 @@
       display: block;
       margin: auto;
     }
-
     svg {
       font-size: 18px;
       vertical-align: middle;
@@ -86,7 +97,6 @@
 
   .actions {
     display: flex;
-    flex-direction: row;
     gap: 12px;
     width: 100%;
     max-width: 300px;
@@ -107,7 +117,6 @@
         background: var(--quinary);
         color: white;
       }
-
       &.submit-button {
         background: var(--quaternary);
         color: white;
@@ -118,10 +127,17 @@
         display: block;
         margin: auto;
       }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        filter: saturate(0.7);
+      }
     }
   }
 }
 
+/* Vorschaubereich */
 .preview {
   display: flex;
   flex-wrap: wrap;
@@ -157,11 +173,8 @@
 
 .uploading-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.85);
+  inset: 0;
+  background: color-mix(in oklab, var(--secondary), white 85%);
   z-index: 999;
   display: flex;
   flex-direction: column;
@@ -202,7 +215,6 @@
   flex-direction: column;
   height: 100%;
 }
-
 .form-header {
   display: flex;
   justify-content: flex-end;

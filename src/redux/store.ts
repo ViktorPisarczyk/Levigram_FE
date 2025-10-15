@@ -1,16 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/authSlice";
 import themeReducer from "./features/theme/themeSlice";
-import postReducer from "../components/Post/postSlice";
-import uiReducer from "../redux/uiSlice";
+import uiReducer from "./uiSlice";
+import { postsApi } from "../redux/apiSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     theme: themeReducer,
-    posts: postReducer,
     ui: uiReducer,
+    [postsApi.reducerPath]: postsApi.reducer, // RTK Query
   },
+  middleware: (getDefault) => getDefault().concat(postsApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
