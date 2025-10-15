@@ -87,7 +87,7 @@ html.kb-open-any .search-form {
 
 /* Öffnet direkt über der Nav (sichtbar) */
 .dock-above-nav {
-  bottom: 0;
+  bottom: var(--nav-h);
 }
 
 /* Wenn Tastatur offen, an Keyboard andocken */
