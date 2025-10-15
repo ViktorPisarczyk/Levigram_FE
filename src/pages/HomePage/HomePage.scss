@@ -70,8 +70,9 @@
 
 /* Wenn irgendein Formular offen ist, darf man nicht „durchklicken“ */
 html.ui-overlay-open .post-feed,
-html.ui-overlay-open .media-carousel {
-  pointer-events: none;
+html.ui-overlay-open .media-carousel,
+html.ui-overlay-open .media-carousel * {
+  pointer-events: none !important;
 }
 
 /* Aber die Overlays selbst müssen klicken dürfen */
@@ -79,5 +80,5 @@ html.ui-overlay-open .media-carousel {
 .post-create-form,
 .post-edit-form,
 .search-form {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
