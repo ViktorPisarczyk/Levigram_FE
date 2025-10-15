@@ -1,6 +1,6 @@
 .post-create-form {
   position: fixed;
-  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  bottom: var(--nav-h);
   left: 0;
   right: 0;
   margin: auto;
@@ -20,6 +20,13 @@
   max-height: calc(100dvh - 10px - env(safe-area-inset-top));
   overscroll-behavior: contain;
 
+  html.kb-open-any & {
+    bottom: max(
+      calc(var(--nav-h) + env(safe-area-inset-bottom)),
+      var(--kb-offset, 0px)
+    );
+  }
+
   .form-content {
     flex: 1;
     min-height: 0;
@@ -30,13 +37,6 @@
     align-items: center;
     gap: 14px;
     padding-bottom: 0;
-
-    html.kb-open-any & {
-      bottom: max(
-        calc(var(--nav-h) + env(safe-area-inset-bottom)),
-        var(--kb-offset, 0px)
-      );
-    }
   }
 
   .media-preview-wrapper {

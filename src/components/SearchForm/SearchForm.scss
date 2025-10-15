@@ -2,7 +2,7 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  bottom: var(--nav-h);
   margin: auto;
   width: 100%;
   max-width: 500px;
@@ -18,17 +18,14 @@
   max-height: calc(100dvh - 10px - env(safe-area-inset-top));
   overscroll-behavior: contain;
 
+  html.kb-open-any & {
+    bottom: max(var(--nav-h), var(--kb-offset, 0px));
+  }
+
   .form-content {
     display: flex;
     align-items: center;
     gap: 8px;
-
-    html.kb-open-any & {
-      bottom: max(
-        calc(var(--nav-h) + env(safe-area-inset-bottom)),
-        var(--kb-offset, 0px)
-      );
-    }
 
     input[type="text"] {
       flex: 1;
@@ -70,14 +67,6 @@
       }
     }
   }
-}
-
-html.kb-open-any .bottom-nav {
-  transform: none;
-}
-
-html.kb-open-any .search-form {
-  bottom: var(--kb-offset, 0); /* direkt über der Tastatur andocken */
 }
 
 /* sanftere Animationen */
