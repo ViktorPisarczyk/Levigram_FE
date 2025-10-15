@@ -199,7 +199,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   };
 
   return (
-    <div className="post-edit-form dock-at-kb">
+    <div className="post-edit-form dock-above-nav">
       <form ref={formRef} onSubmit={handleSubmit}>
         <div className="form-content">
           <textarea

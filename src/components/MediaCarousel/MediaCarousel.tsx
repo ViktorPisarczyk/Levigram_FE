@@ -292,6 +292,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
 
   const pinchRefs = useRef<(PinchZoomHandle | null)[]>([]);
 
+  const isUiOverlayOpen = () =>
+    document.documentElement.classList.contains("ui-overlay-open");
+
   // Keen slider (Feed)
   const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
     loop: false,
@@ -482,7 +485,10 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                 ) : (
                   <div
                     className="image-wrapper"
-                    onClick={() => openGallery(index)}
+                    onClick={() => {
+                      if (isUiOverlayOpen()) return;
+                      openGallery(index);
+                    }}
                   >
                     <OptimizedImage
                       url={item.url}
@@ -526,7 +532,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                       <button
                         type="button"
                         className="icon-btn"
-                        onClick={() => openGallery(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isUiOverlayOpen()) return;
+                          openGallery(index);
+                        }}
                         aria-label="Bild im Vollbild anzeigen"
                         title="Vollbild"
                       >

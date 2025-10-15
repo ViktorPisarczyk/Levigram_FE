@@ -1,4 +1,3 @@
-// src/components/Avatar/Avatar.tsx
 import React from "react";
 import { buildCloudinaryUrl, isCloudinary } from "../../cloudinary";
 
@@ -63,12 +62,11 @@ const Avatar: React.FC<AvatarProps> = ({
     );
   }
 
-  // Cloudinary: Gesichts-Fokus, rund, dichte-aware
-  // c_thumb,g_face,r_max,w_XX,h_XX,f_auto,q_auto:eco,dpr_auto
+  // Cloudinary:
   const makeSrc = (w: number) =>
     buildCloudinaryUrl(
       display,
-      `f_auto,q_auto:eco,dpr_auto,c_thumb,g_face,r_max,w_${w},h_${w}`
+      `f_auto,q_auto:eco,dpr_auto,r_max,w_${w},h_${w}`
     );
 
   const w1x = px;
@@ -79,7 +77,6 @@ const Avatar: React.FC<AvatarProps> = ({
     w3x
   )} ${w3x}w`;
 
-  // sizes: exakt px am Layoutplatz; Browser wählt passendes dpr
   const sizes = `${px}px`;
 
   return (

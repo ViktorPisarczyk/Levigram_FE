@@ -68,6 +68,14 @@ const Home: React.FC = () => {
     setHasMore(data.hasMore);
   }, [data]);
 
+  // Body-Klasse für Overlay-Status
+  useEffect(() => {
+    const hasOverlay = isPostFormOpen || isProfileEditOpen || isSearchFormOpen;
+    const root = document.documentElement;
+    root.classList.toggle("ui-overlay-open", !!hasOverlay);
+    return () => root.classList.remove("ui-overlay-open");
+  }, [isPostFormOpen, isProfileEditOpen, isSearchFormOpen]);
+
   // Suche ausführen (aus SearchForm)
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -126,8 +134,12 @@ const Home: React.FC = () => {
         <>
           <div
             className="blur-overlay"
-            onClick={() => dispatch(closePostForm())}
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(closePostForm());
+            }}
           />
+
           <PostCreateForm onClose={() => dispatch(closePostForm())} />
         </>
       )}
@@ -136,7 +148,10 @@ const Home: React.FC = () => {
         <>
           <div
             className="blur-overlay"
-            onClick={() => dispatch(closeProfileEdit())}
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(closeProfileEdit());
+            }}
           />
           <ProfileEditForm onClose={() => dispatch(closeProfileEdit())} />
         </>
@@ -146,7 +161,10 @@ const Home: React.FC = () => {
         <>
           <div
             className="blur-overlay"
-            onClick={() => dispatch(closeSearchForm())}
+            onClick={(e) => {
+              e.stopPropagation();
+              dispatch(closeSearchForm());
+            }}
           />
           <SearchForm
             onClose={() => dispatch(closeSearchForm())}

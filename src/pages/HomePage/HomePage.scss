@@ -67,3 +67,17 @@
     transform: rotate(360deg);
   }
 }
+
+/* Wenn irgendein Formular offen ist, darf man nicht „durchklicken“ */
+html.ui-overlay-open .post-feed,
+html.ui-overlay-open .media-carousel {
+  pointer-events: none;
+}
+
+/* Aber die Overlays selbst müssen klicken dürfen */
+.blur-overlay,
+.post-create-form,
+.post-edit-form,
+.search-form {
+  pointer-events: auto;
+}

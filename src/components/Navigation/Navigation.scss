@@ -48,12 +48,6 @@
   }
 }
 
-/* Tastatur offen: Nav komplett ausblenden + Safe-Area-Padding entfernen */
-html.kb-open-any .bottom-nav {
-  padding-bottom: 0;
-  transform: translateY(100%);
-}
-
 /* Panels, die an die Tastatur andocken sollen */
 .dock-at-kb {
   bottom: var(--kb-offset, 0) !important;
