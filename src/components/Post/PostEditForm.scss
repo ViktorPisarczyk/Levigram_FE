@@ -182,7 +182,7 @@
 
 /* Öffnet direkt über der Nav (sichtbar) */
 .dock-above-nav {
-  bottom: calc(var(--nav-h, 78px) + max(0px, env(safe-area-inset-bottom)));
+  bottom: 0;
 }
 
 /* Wenn Tastatur offen, an Keyboard andocken */

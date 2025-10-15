@@ -461,7 +461,10 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                     <div
                       className="video-poster"
                       style={{ backgroundImage: `url(${poster})` }}
-                      onClick={() => handlePlay(index)}
+                      onClick={() => {
+                        if (isUiOverlayOpen()) return;
+                        handlePlay(index);
+                      }}
                     >
                       <div className="play-button">
                         <svg
@@ -574,7 +577,10 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
           {media.map((_, idx) => (
             <button
               key={idx}
-              onClick={() => instanceRef.current?.moveToIdx(idx)}
+              onClick={() => {
+                if (isUiOverlayOpen()) return;
+                instanceRef.current?.moveToIdx(idx);
+              }}
               className={currentSlide === idx ? "dot active" : "dot"}
               aria-label={`Slide ${idx + 1}`}
             />

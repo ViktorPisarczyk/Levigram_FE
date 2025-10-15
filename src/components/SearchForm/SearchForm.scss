@@ -1,8 +1,8 @@
 .search-form {
   position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
+  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
   margin: auto;
   width: 100%;
   max-width: 500px;
@@ -10,7 +10,7 @@
   background-color: var(--secondary);
   box-shadow: var(--box-shadow);
   border-radius: 0.5rem 0.5rem 0 0;
-  z-index: 1000;
+  z-index: 1100;
   color: var(--text);
   transition: bottom 0.15s ease;
   will-change: bottom;
@@ -23,11 +23,11 @@
     align-items: center;
     gap: 8px;
 
-    /* genug Abstand, wenn Safe-Area/Tastatur aktiv */
-    padding-bottom: max(env(safe-area-inset-bottom), 0px);
-
     html.kb-open-any & {
-      padding-bottom: calc(var(--kb-offset, 0px) + 8px);
+      bottom: max(
+        calc(var(--nav-h) + env(safe-area-inset-bottom)),
+        var(--kb-offset, 0px)
+      );
     }
 
     input[type="text"] {
@@ -73,7 +73,7 @@
 }
 
 html.kb-open-any .bottom-nav {
-  transform: translateY(100%);
+  transform: none;
 }
 
 html.kb-open-any .search-form {

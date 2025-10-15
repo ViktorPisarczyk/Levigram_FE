@@ -6,6 +6,7 @@
   margin: auto;
   width: 100%;
   max-width: 500px;
+  height: var(--nav-h);
   background-color: var(--navigation);
   border-top: 1px solid var(--nav-border);
   box-shadow: var(--nav-shadow);
@@ -51,6 +52,10 @@
 /* Panels, die an die Tastatur andocken sollen */
 .dock-at-kb {
   bottom: var(--kb-offset, 0) !important;
+}
+
+html.kb-open-any .bottom-nav {
+  transform: none;
 }
 
 /* Optional: Progressive Enhancement ohne JS-Klasse, falls :has() verfügbar */
