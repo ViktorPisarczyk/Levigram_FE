@@ -298,7 +298,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   };
 
   return (
-    <div ref={formRef} className="post-create-form dock-above-nav">
+    <div ref={formRef} className="post-create-form">
       <div className="form-content">
         <textarea
           placeholder="Schreibe etwas..."

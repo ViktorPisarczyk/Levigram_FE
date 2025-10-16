@@ -1,8 +1,9 @@
+/* SearchForm.scss */
 .search-form {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--nav-h);
+  bottom: var(--nav-total-h);
   margin: auto;
   width: 100%;
   max-width: 500px;
@@ -15,17 +16,18 @@
   transition: bottom 0.15s ease;
   will-change: bottom;
 
-  max-height: calc(100dvh - 10px - env(safe-area-inset-top));
-  overscroll-behavior: contain;
-
   html.kb-open-any & {
-    bottom: max(var(--nav-h), var(--kb-offset, 0px));
+    bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
   }
+
+  max-height: calc(100dvh - 10px - env(safe-area-inset-top, 0px));
+  overscroll-behavior: contain;
 
   .form-content {
     display: flex;
     align-items: center;
     gap: 8px;
+    padding-bottom: 0;
 
     input[type="text"] {
       flex: 1;
@@ -43,7 +45,6 @@
       &:focus {
         outline: none;
         border: 2px solid var(--tertiary);
-        background-color: var(--textarea);
       }
     }
 
@@ -59,7 +60,6 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-
       &:disabled {
         opacity: 0.55;
         cursor: not-allowed;
@@ -67,19 +67,4 @@
       }
     }
   }
-}
-
-/* sanftere Animationen */
-.bottom-nav {
-  transition: transform 0.2s ease;
-}
-
-/* Öffnet direkt über der Nav (sichtbar) */
-.dock-above-nav {
-  bottom: var(--nav-h);
-}
-
-/* Wenn Tastatur offen, an Keyboard andocken */
-html.kb-open-any .dock-above-nav {
-  bottom: var(--kb-offset, 0);
 }

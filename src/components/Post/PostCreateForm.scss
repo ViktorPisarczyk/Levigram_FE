@@ -1,8 +1,8 @@
 .post-create-form {
   position: fixed;
-  bottom: var(--nav-h);
   left: 0;
   right: 0;
+  bottom: var(--nav-total-h);
   margin: auto;
   width: 100%;
   max-width: 500px;
@@ -17,14 +17,11 @@
   gap: 8px;
   transition: bottom 0.15s ease;
 
-  max-height: calc(100dvh - 10px - env(safe-area-inset-top));
+  max-height: calc(100dvh - 10px - env(safe-area-inset-top, 0px));
   overscroll-behavior: contain;
 
   html.kb-open-any & {
-    bottom: max(
-      calc(var(--nav-h) + env(safe-area-inset-bottom)),
-      var(--kb-offset, 0px)
-    );
+    bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
   }
 
   .form-content {
@@ -38,7 +35,6 @@
     gap: 14px;
     padding-bottom: 0;
   }
-
   .media-preview-wrapper {
     width: 100%;
     max-width: 300px;
@@ -232,14 +228,4 @@
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-}
-
-/* Öffnet direkt über der Nav (sichtbar) */
-.dock-above-nav {
-  bottom: 0;
-}
-
-/* Wenn Tastatur offen, an Keyboard andocken */
-html.kb-open-any .dock-above-nav {
-  bottom: var(--kb-offset, 0);
 }

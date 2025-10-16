@@ -1,6 +1,6 @@
 .post-edit-form {
   position: fixed;
-  bottom: 78px;
+  bottom: var(--nav-total-h);
   left: 0;
   right: 0;
   margin: auto;
@@ -178,14 +178,4 @@
       }
     }
   }
-}
-
-/* Öffnet direkt über der Nav (sichtbar) */
-.dock-above-nav {
-  bottom: 0;
-}
-
-/* Wenn Tastatur offen, an Keyboard andocken */
-html.kb-open-any .dock-above-nav {
-  bottom: var(--kb-offset, 0);
 }

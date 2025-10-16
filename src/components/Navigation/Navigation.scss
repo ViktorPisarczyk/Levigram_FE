@@ -1,23 +1,25 @@
 .bottom-nav {
   position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
+  bottom: 0;
   margin: auto;
   width: 100%;
   max-width: 500px;
-  height: var(--nav-h);
+
+  height: var(--nav-total-h);
+  box-sizing: border-box;
+
+  padding: 6px 0;
+
   background-color: var(--navigation);
   border-top: 1px solid var(--nav-border);
   box-shadow: var(--nav-shadow);
-  /* normal: etwas Padding + Safe-Area (leicht reduziert) */
-  padding: 6px 0 max(0px, calc(env(safe-area-inset-bottom) - 14px)) 0;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
   transition: transform 0.2s ease;
-  will-change: transform;
 }
 
 .nav-button {
@@ -56,15 +58,4 @@
 
 html.kb-open-any .bottom-nav {
   transform: none;
-}
-
-/* Optional: Progressive Enhancement ohne JS-Klasse, falls :has() verfügbar */
-@supports selector(:has(*)) {
-  .search-form:has(:focus),
-  .post-create-form:has(:focus),
-  .profile-edit-form:has(:focus),
-  .comment-sheet:has(:focus),
-  [data-dock-on-kb]:has(:focus) {
-    bottom: var(--kb-offset, 0) !important;
-  }
 }

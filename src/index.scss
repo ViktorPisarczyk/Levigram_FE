@@ -22,6 +22,7 @@
   --background-size: auto;
   --kb-offset: 0px;
   --nav-h: 78px;
+  --nav-total-h: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
 }
 
 [data-theme="dark"] {
@@ -43,6 +44,7 @@
   --background-size: 350px auto;
   --kb-offset: 0px;
   --nav-h: 78px;
+  --nav-total-h: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
 }
 
 html,

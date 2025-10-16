@@ -1,7 +1,7 @@
 .profile-edit-form {
   position: fixed;
   align-items: center;
-  bottom: 78px;
+  bottom: var(--nav-total-h);
   left: 0;
   right: 0;
   margin: auto;
