@@ -3,23 +3,25 @@
   left: 0;
   right: 0;
   bottom: 0;
-  margin: auto;
-  width: 100%;
-  max-width: 500px;
-
   height: var(--nav-total-h);
-  box-sizing: border-box;
-
-  padding: 6px 0;
-
   background-color: var(--navigation);
   border-top: 1px solid var(--nav-border);
   box-shadow: var(--nav-shadow);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
   z-index: 1000;
   transition: transform 0.2s ease;
+  will-change: transform;
+}
+
+.bottom-nav__row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: env(safe-area-inset-bottom, 0);
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
 }
 
 .nav-button {
@@ -51,11 +53,6 @@
   }
 }
 
-/* Panels, die an die Tastatur andocken sollen */
-.dock-at-kb {
-  bottom: var(--kb-offset, 0) !important;
-}
-
 html.kb-open-any .bottom-nav {
-  transform: none;
+  transform: translateY(100%);
 }

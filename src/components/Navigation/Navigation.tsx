@@ -58,40 +58,42 @@ const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <nav className="bottom-nav">
-      <button onClick={onHomeClick} className="nav-button" aria-label="Home">
-        <IoHomeOutline />
-      </button>
-      <button
-        onClick={handleSearchClick}
-        className="nav-button"
-        aria-label="Search"
-      >
-        <IoSearchOutline />
-      </button>
+      <div className="bottom-nav__row">
+        <button onClick={onHomeClick} className="nav-button" aria-label="Home">
+          <IoHomeOutline />
+        </button>
+        <button
+          onClick={handleSearchClick}
+          className="nav-button"
+          aria-label="Search"
+        >
+          <IoSearchOutline />
+        </button>
 
-      <button
-        ref={postButtonRef}
-        onClick={() => dispatch(togglePostForm())}
-        className="post-button"
-        aria-label="Post"
-      >
-        <IoIosAddCircleOutline />
-      </button>
-      <button
-        onClick={() => dispatch(toggleDarkMode())}
-        className="nav-button"
-        aria-label="Toggle Dark Mode"
-      >
-        {darkMode ? <IoSunnyOutline /> : <IoMoonOutline />}
-      </button>
-      <button
-        ref={profileButtonRef}
-        onClick={() => dispatch(toggleProfileEdit())}
-        className="nav-button"
-        aria-label="Profile"
-      >
-        <CgProfile />
-      </button>
+        <button
+          ref={postButtonRef}
+          onClick={() => dispatch(togglePostForm())}
+          className="post-button"
+          aria-label="Post"
+        >
+          <IoIosAddCircleOutline />
+        </button>
+        <button
+          onClick={() => dispatch(toggleDarkMode())}
+          className="nav-button"
+          aria-label="Toggle Dark Mode"
+        >
+          {darkMode ? <IoSunnyOutline /> : <IoMoonOutline />}
+        </button>
+        <button
+          ref={profileButtonRef}
+          onClick={() => dispatch(toggleProfileEdit())}
+          className="nav-button"
+          aria-label="Profile"
+        >
+          <CgProfile />
+        </button>
+      </div>
     </nav>
   );
 };
