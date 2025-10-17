@@ -9,6 +9,7 @@ import Navigation from "../../components/Navigation/Navigation";
 
 import PostCreateForm from "../../components/Post/PostCreateForm";
 import ProfileEditForm from "../../components/ProfileEditForm/ProfileEditForm";
+import PostEditForm from "../../components/Post/PostEditForm";
 import {
   closePostForm,
   closeProfileEdit,
@@ -114,6 +115,9 @@ const Home: React.FC = () => {
     };
   }, []);
 
+  // State für globales Post-Edit-Overlay
+  const [editPost, setEditPost] = useState<FeedItem | null>(null);
+
   return (
     <>
       <div className="home-page">
@@ -126,7 +130,7 @@ const Home: React.FC = () => {
             const isLast = !searchActive && idx === currentList.length - 1;
             return (
               <div key={post._id} ref={isLast ? handleObserver : null}>
-                <PostComponent post={post} />
+                <PostComponent post={post} onEdit={() => setEditPost(post)} />
               </div>
             );
           })}
@@ -145,7 +149,6 @@ const Home: React.FC = () => {
                 dispatch(closePostForm());
               }}
             />
-
             <PostCreateForm onClose={() => dispatch(closePostForm())} />
           </>
         )}
@@ -176,6 +179,14 @@ const Home: React.FC = () => {
               onClose={() => dispatch(closeSearchForm())}
               onSearch={handleSearch}
             />
+          </>
+        )}
+
+        {/* Globales PostEdit-Overlay */}
+        {editPost && (
+          <>
+            <div className="blur-overlay" onClick={() => setEditPost(null)} />
+            <PostEditForm post={editPost} onCancel={() => setEditPost(null)} />
           </>
         )}
       </div>

@@ -50,6 +50,7 @@ const formatDate = (iso: string) => {
 
 export interface PostComponentProps {
   post: FeedItem;
+  onEdit?: () => void;
 }
 
 /* ------- CommentForm ------- */
@@ -246,7 +247,7 @@ const CommentsList: FC<{ postId: string }> = ({ postId }) => {
 };
 
 /* ------- Post ------- */
-const PostComponent: FC<PostComponentProps> = ({ post }) => {
+const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
   const { user } = useSelector((s: RootState) => s.auth);
 
   const [toggleLike] = useToggleLikeMutation();
@@ -364,7 +365,11 @@ const PostComponent: FC<PostComponentProps> = ({ post }) => {
                 <button
                   onClick={() => {
                     setShowDropDown(false);
-                    setIsEditing(true);
+                    if (onEdit) {
+                      onEdit();
+                    } else {
+                      setIsEditing(true);
+                    }
                   }}
                 >
                   Bearbeiten
@@ -394,11 +399,9 @@ const PostComponent: FC<PostComponentProps> = ({ post }) => {
         )}
       </div>
 
-      {isEditing ? (
-        <>
-          <div className="blur-overlay"></div>
-          <PostEditForm post={post} onCancel={() => setIsEditing(false)} />
-        </>
+      {/* Wenn onEdit übergeben wird, rendere nie die lokale EditForm */}
+      {isEditing && !onEdit ? (
+        <PostEditForm post={post} onCancel={() => setIsEditing(false)} />
       ) : (
         <>
           <p className="post-description">{post.content}</p>

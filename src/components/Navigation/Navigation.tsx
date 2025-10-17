@@ -97,19 +97,19 @@ const Navigation: React.FC<NavigationProps> = ({
           <IoIosAddCircleOutline />
         </button>
         <button
+          onClick={() => dispatch(toggleDarkMode())}
+          className="nav-button"
+          aria-label="Toggle Dark Mode"
+        >
+          {darkMode ? <IoSunnyOutline /> : <IoMoonOutline />}
+        </button>
+        <button
           onClick={handleProfileClick}
           ref={profileButtonRef}
           className="nav-button"
           aria-label="Profile"
         >
           <CgProfile />
-        </button>
-        <button
-          onClick={() => dispatch(toggleDarkMode())}
-          className="nav-button"
-          aria-label="Toggle Dark Mode"
-        >
-          {darkMode ? <IoSunnyOutline /> : <IoMoonOutline />}
         </button>
       </div>
     </nav>
