@@ -5,6 +5,7 @@ export const CLOUDINARY = {
   uploadPreset: "levi_unsigned",
   folderPosts: "uploads/posts",
   folderPosters: "uploads/posts/posters",
+  folderProfiles: "uploads/profiles",
 };
 
 // Einfache Response-Typen
