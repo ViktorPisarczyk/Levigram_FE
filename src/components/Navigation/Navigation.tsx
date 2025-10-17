@@ -6,6 +6,12 @@ import {
   togglePostForm,
   toggleProfileEdit,
   toggleSearchForm,
+  openPostForm,
+  closePostForm,
+  openProfileEdit,
+  closeProfileEdit,
+  openSearchForm,
+  closeSearchForm,
 } from "../../redux/uiSlice";
 
 import { toggleDarkMode } from "../../redux/features/theme/themeSlice";
@@ -46,26 +52,26 @@ const Navigation: React.FC<NavigationProps> = ({
     (state: RootState) => state.ui.isProfileEditOpen
   );
 
-  const [recentlyClosed, setRecentlyClosed] = useState(false);
-  const prevIsSearchFormOpen = useRef(isSearchFormOpen);
-
-  useEffect(() => {
-    if (prevIsSearchFormOpen.current && !isSearchFormOpen) {
-      setRecentlyClosed(true);
-      setTimeout(() => setRecentlyClosed(false), 300);
-    }
-    prevIsSearchFormOpen.current = isSearchFormOpen;
-  }, [isSearchFormOpen]);
-
   const handleSearchClick = () => {
-    if (recentlyClosed) return;
-    dispatch(toggleSearchForm());
+    if (isSearchFormOpen) {
+      dispatch(closeSearchForm());
+    } else {
+      dispatch(openSearchForm());
+    }
   };
   const handlePostClick = () => {
-    dispatch(togglePostForm());
+    if (isPostFormOpen) {
+      dispatch(closePostForm());
+    } else {
+      dispatch(openPostForm());
+    }
   };
   const handleProfileClick = () => {
-    dispatch(toggleProfileEdit());
+    if (isProfileEditOpen) {
+      dispatch(closeProfileEdit());
+    } else {
+      dispatch(openProfileEdit());
+    }
   };
 
   return (
@@ -91,19 +97,19 @@ const Navigation: React.FC<NavigationProps> = ({
           <IoIosAddCircleOutline />
         </button>
         <button
+          onClick={handleProfileClick}
+          ref={profileButtonRef}
+          className="nav-button"
+          aria-label="Profile"
+        >
+          <CgProfile />
+        </button>
+        <button
           onClick={() => dispatch(toggleDarkMode())}
           className="nav-button"
           aria-label="Toggle Dark Mode"
         >
           {darkMode ? <IoSunnyOutline /> : <IoMoonOutline />}
-        </button>
-        <button
-          ref={profileButtonRef}
-          onClick={handleProfileClick}
-          className="nav-button"
-          aria-label="Profile"
-        >
-          <CgProfile />
         </button>
       </div>
     </nav>

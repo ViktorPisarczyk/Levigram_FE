@@ -33,6 +33,14 @@ const uiSlice = createSlice({
         state.isSearchFormOpen = false;
       }
     },
+    openProfileEdit(state) {
+      state.isProfileEditOpen = true;
+      state.isPostFormOpen = false;
+      state.isSearchFormOpen = false;
+    },
+    closeProfileEdit(state) {
+      state.isProfileEditOpen = false;
+    },
     toggleProfileEdit(state) {
       if (state.isProfileEditOpen) {
         state.isProfileEditOpen = false;
@@ -42,8 +50,13 @@ const uiSlice = createSlice({
         state.isSearchFormOpen = false;
       }
     },
-    closeProfileEdit(state) {
+    openSearchForm(state) {
+      state.isSearchFormOpen = true;
+      state.isPostFormOpen = false;
       state.isProfileEditOpen = false;
+    },
+    closeSearchForm(state) {
+      state.isSearchFormOpen = false;
     },
     toggleSearchForm(state) {
       if (state.isSearchFormOpen) {
@@ -54,9 +67,6 @@ const uiSlice = createSlice({
         state.isProfileEditOpen = false;
       }
     },
-    closeSearchForm(state) {
-      state.isSearchFormOpen = false;
-    },
   },
 });
 
@@ -64,8 +74,10 @@ export const {
   openPostForm,
   closePostForm,
   togglePostForm,
-  toggleProfileEdit,
+  openProfileEdit,
   closeProfileEdit,
+  toggleProfileEdit,
+  openSearchForm,
   toggleSearchForm,
   closeSearchForm,
 } = uiSlice.actions;
