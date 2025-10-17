@@ -18,21 +18,41 @@ const uiSlice = createSlice({
   reducers: {
     openPostForm(state) {
       state.isPostFormOpen = true;
+      state.isProfileEditOpen = false;
+      state.isSearchFormOpen = false;
     },
     closePostForm(state) {
       state.isPostFormOpen = false;
     },
-    togglePostForm: (state) => {
-      state.isPostFormOpen = !state.isPostFormOpen;
+    togglePostForm(state) {
+      if (state.isPostFormOpen) {
+        state.isPostFormOpen = false;
+      } else {
+        state.isPostFormOpen = true;
+        state.isProfileEditOpen = false;
+        state.isSearchFormOpen = false;
+      }
     },
     toggleProfileEdit(state) {
-      state.isProfileEditOpen = !state.isProfileEditOpen;
+      if (state.isProfileEditOpen) {
+        state.isProfileEditOpen = false;
+      } else {
+        state.isProfileEditOpen = true;
+        state.isPostFormOpen = false;
+        state.isSearchFormOpen = false;
+      }
     },
     closeProfileEdit(state) {
       state.isProfileEditOpen = false;
     },
     toggleSearchForm(state) {
-      state.isSearchFormOpen = !state.isSearchFormOpen;
+      if (state.isSearchFormOpen) {
+        state.isSearchFormOpen = false;
+      } else {
+        state.isSearchFormOpen = true;
+        state.isPostFormOpen = false;
+        state.isProfileEditOpen = false;
+      }
     },
     closeSearchForm(state) {
       state.isSearchFormOpen = false;

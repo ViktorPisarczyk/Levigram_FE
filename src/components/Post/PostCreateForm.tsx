@@ -140,7 +140,17 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   useClickOutside(
     formRef,
     () => {
-      if (!uploading && !creating) onClose();
+      if (!uploading && !creating) {
+        document.documentElement.classList.remove("kb-open-any");
+        const active = document.activeElement as HTMLElement | null;
+        if (
+          active &&
+          (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
+        ) {
+          active.blur();
+        }
+        onClose();
+      }
     },
     triggerRef
   );

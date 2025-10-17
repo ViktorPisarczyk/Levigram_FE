@@ -126,7 +126,17 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   const formRef = useRef<HTMLFormElement>(null);
 
   useClickOutside(formRef, () => {
-    if (!uploading) onCancel();
+    if (!uploading) {
+      document.documentElement.classList.remove("kb-open-any");
+      const active = document.activeElement as HTMLElement | null;
+      if (
+        active &&
+        (active.tagName === "INPUT" || active.tagName === "TEXTAREA")
+      ) {
+        active.blur();
+      }
+      onCancel();
+    }
   });
 
   useEffect(() => {
