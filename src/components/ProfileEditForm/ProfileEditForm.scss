@@ -17,7 +17,7 @@
   flex-direction: column;
 
   html.kb-open-any & {
-    bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
+    bottom: var(--kb-offset, 0px);
   }
 
   .form-header {
@@ -132,16 +132,18 @@
   }
 }
 
-/* Öffnet direkt über der Nav (sichtbar) */
-.dock-above-nav {
-  bottom: calc(var(--nav-h, 78px) + max(0px, env(safe-area-inset-bottom)));
-}
+.blur-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--nav-total-h);
+  z-index: 1050;
+  backdrop-filter: blur(6px);
+  background: color-mix(in oklab, transparent, black 20%);
+  pointer-events: auto;
 
-/* Wenn Tastatur offen, an Keyboard andocken */
-html.kb-open-any .dock-above-nav {
-  bottom: var(--kb-offset, 0);
-}
-
-html.kb-open-any .profile-edit-form {
-  bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
+  .kb-open-any & {
+    bottom: 0;
+  }
 }
