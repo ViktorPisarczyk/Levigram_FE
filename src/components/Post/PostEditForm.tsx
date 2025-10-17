@@ -3,6 +3,11 @@ import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
 import heic2any from "heic2any";
 import "./PostEditForm.scss";
+import {
+  uploadToCloudinary,
+  uploadPosterDataUrl,
+  CLOUDINARY,
+} from "../../cloudinary";
 
 import type { Post } from "../../types/models";
 import { useEditPostMutation } from "../../redux/apiSlice";
@@ -71,61 +76,32 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   };
 
   const uploadPosterImage = async (dataUrl: string): Promise<string> => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-    const blob = await (await fetch(dataUrl)).blob();
-
-    const formData = new FormData();
-    formData.append("file", blob);
-    formData.append("upload_preset", uploadPreset);
-    formData.append("folder", "uploads/posts/posters");
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      { method: "POST", body: formData }
-    );
-
-    const data = await res.json();
-    if (!res.ok || !data.secure_url)
-      throw new Error(data.message || "Poster upload failed");
-
-    return data.secure_url;
+    const res = await uploadPosterDataUrl(dataUrl);
+    return res.secure_url;
   };
 
   const uploadMediaFiles = async (files: MediaFile[]) => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
     const uploads = await Promise.all(
       files.map(async (media) => {
-        const file = media.rawFile!;
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", uploadPreset);
-        formData.append("folder", "uploads/posts");
-
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-          { method: "POST", body: formData }
+        // Datei hochladen
+        const up = await uploadToCloudinary(
+          media.rawFile!,
+          CLOUDINARY.folderPosts
         );
 
-        const data = await res.json();
-        if (!res.ok || !data.secure_url)
-          throw new Error(data.message || "Upload failed");
-
+        // Poster ggf. separat hochladen (wenn wir ein dataURL-Poster erzeugt haben)
         let finalPoster = media.poster;
         if (finalPoster?.startsWith("data:")) {
           try {
-            finalPoster = await uploadPosterImage(finalPoster);
-          } catch (err) {
-            console.warn("Poster upload failed:", err);
+            const posterRes = await uploadPosterDataUrl(finalPoster);
+            finalPoster = posterRes.secure_url;
+          } catch (e) {
+            console.warn("Poster upload failed:", e);
           }
         }
-
-        return { url: data.secure_url, poster: finalPoster };
+        return { url: up.secure_url, poster: finalPoster };
       })
     );
-
     return uploads;
   };
 

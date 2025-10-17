@@ -23,7 +23,7 @@ const pickSize = (size?: SizeToken) =>
 
 /**
  * Rundes Avatar-Bild mit:
- * - Cloudinary: f_auto,q_auto:eco,dpr_auto,c_thumb,g_face,r_max
+ * - Cloudinary: f_auto,q_auto:eco,dpr_auto,c_thumb,r_max
  * - srcset für 1x/2x/3x
  * - Fallback für Nicht-Cloudinary-URLs
  */
@@ -66,7 +66,7 @@ const Avatar: React.FC<AvatarProps> = ({
   const makeSrc = (w: number) =>
     buildCloudinaryUrl(
       display,
-      `f_auto,q_auto:eco,dpr_auto,r_max,w_${w},h_${w}`
+      `f_auto,q_auto:eco,dpr_auto,r_max,c_fit,w_${w},h_${w}`
     );
 
   const w1x = px;

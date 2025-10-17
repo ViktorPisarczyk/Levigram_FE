@@ -13,7 +13,7 @@ import "./MediaCarousel.scss";
 
 /* ----------------------------------------
    OptimizedImage – mobile first
-   - FEED: genau 500x360 (c_fill) – klein & konsistent
+   - FEED: genau 500x360 (c_fit) – klein & konsistent
    - GALLERY: max ~1200px (contain)
 ---------------------------------------- */
 type ImgContext = "feed" | "gallery";
@@ -43,7 +43,7 @@ export const OptimizedImage = memo(function OptimizedImage({
   const feedSrc = isCloudinary
     ? buildCloudinaryUrl(
         url,
-        `f_auto,q_auto:eco,dpr_auto,c_fill,w_${FEED_W},h_${FEED_H}`
+        `f_auto,q_auto:good,dpr_auto,c_fit,w_${FEED_W},h_${FEED_H}`
       )
     : url;
 
