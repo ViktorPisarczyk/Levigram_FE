@@ -179,3 +179,7 @@
     }
   }
 }
+
+html.kb-open-any .post-edit-form {
+  bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
+}

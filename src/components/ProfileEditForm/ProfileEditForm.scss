@@ -137,3 +137,7 @@
 html.kb-open-any .dock-above-nav {
   bottom: var(--kb-offset, 0);
 }
+
+html.kb-open-any .profile-edit-form {
+  bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
+}
