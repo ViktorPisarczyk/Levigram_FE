@@ -465,4 +465,8 @@
   backdrop-filter: blur(6px);
   background: color-mix(in oklab, transparent, black 20%);
   pointer-events: auto;
+
+  .kb-open-any & {
+    bottom: 0;
+  }
 }
