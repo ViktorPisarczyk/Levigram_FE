@@ -13,25 +13,17 @@ const SearchForm: React.FC<SearchFormProps> = ({ onClose, onSearch }) => {
   const formRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useClickOutside(formRef, () => onClose());
-
-  // Setze kb-open-any beim Mounten und Fokussieren, entferne beim Unmounten und Blur
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.add("kb-open-any");
     const input = inputRef.current;
-    if (input) {
-      const handleFocus = () => root.classList.add("kb-open-any");
-      const handleBlur = () => root.classList.remove("kb-open-any");
-      input.addEventListener("focus", handleFocus);
-      input.addEventListener("blur", handleBlur);
-      return () => {
-        input.removeEventListener("focus", handleFocus);
-        input.removeEventListener("blur", handleBlur);
-        root.classList.remove("kb-open-any");
-      };
-    }
+    if (!input) return;
+    const handleFocus = () => root.classList.add("kb-open-any");
+    const handleBlur = () => root.classList.remove("kb-open-any");
+    input.addEventListener("focus", handleFocus);
+    input.addEventListener("blur", handleBlur);
     return () => {
+      input.removeEventListener("focus", handleFocus);
+      input.removeEventListener("blur", handleBlur);
       root.classList.remove("kb-open-any");
     };
   }, []);
