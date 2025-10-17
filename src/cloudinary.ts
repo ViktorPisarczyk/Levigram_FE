@@ -1,6 +1,9 @@
+export const isCloudinary = (url: string) => /res\.cloudinary\.com/.test(url);
+
+// src/cloudinary.ts
 export const CLOUDINARY = {
-  cloudName: "dobaxwfhx",
-  unsignedPreset: "levi_unsigned",
+  cloudName: "dobaxwfhx", // aus deiner .env, aber hier fest eingetragen
+  unsignedPreset: "levi_unsigned", // Name des in Cloudinary erstellten Presets
   folderPosts: "uploads/posts",
   folderPosters: "uploads/posts/posters",
 };
