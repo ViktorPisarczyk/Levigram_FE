@@ -2,7 +2,7 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--nav-total-h);
   margin: auto;
   width: 100%;
   max-width: 500px;
