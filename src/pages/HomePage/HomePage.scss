@@ -1,3 +1,8 @@
+html.kb-open-any .home-page,
+html.kb-open-any .post-feed {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
 .home-page {
   min-height: 100vh;
   display: flex;
