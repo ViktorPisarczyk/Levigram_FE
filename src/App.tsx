@@ -94,163 +94,44 @@ const App: React.FC = () => {
     })();
   }, [status, isAuthenticated]);
 
-  // Keyboard handling (mobile)
+  // Keyboard handling (global, robust)
   useEffect(() => {
     const root = document.documentElement;
-    const vv = (window as any).visualViewport as VisualViewport | undefined;
-
-    // Fallback: Setze kb-open-any, wenn ein Input/Textarea fokussiert ist (z.B. iOS Safari bei input)
-    const checkKeyboardFallback = () => {
-      const active = document.activeElement as Element | null;
-      const isField =
-        !!active &&
-        (active.tagName === "INPUT" ||
-          active.tagName === "TEXTAREA" ||
-          (active as HTMLElement).isContentEditable);
-      // Wenn visualViewport-Offset > 0, dann wie gehabt
-      let offset = 0;
-      if (vv) {
-        offset = Math.max(0, window.innerHeight - vv.height);
-      }
-      // Fallback: Wenn ein Feld fokussiert ist, aber offset == 0, dann setze einen Minimalwert
-      if (isField && offset === 0) {
-        offset = 3; // Minimalwert, damit CSS greift
-      }
-      root.style.setProperty("--kb-offset", `${Math.round(offset)}px`);
-      if (isField || offset > 0) {
-        root.classList.add("kb-open-any");
-      } else {
-        root.classList.remove("kb-open-any");
-        root.classList.remove("kb-open-search");
-      }
-    };
-
-    const onVVChange = () => {
-      if (!vv) return;
-      const offset = Math.max(0, window.innerHeight - vv.height);
-      root.style.setProperty("--kb-offset", `${Math.round(offset)}px`);
-      if (offset > 0) root.classList.add("kb-open-any");
-      else {
-        root.classList.remove("kb-open-any");
-        root.classList.remove("kb-open-search");
-      }
-    };
-
-    vv?.addEventListener("resize", onVVChange);
-    vv?.addEventListener("scroll", onVVChange);
-    onVVChange();
-    // Fallback-Listener für focus/blur
-    document.addEventListener("focusin", checkKeyboardFallback);
-    document.addEventListener("focusout", checkKeyboardFallback);
-    // Initial prüfen
-    checkKeyboardFallback();
-
-    let lastDockedEl: Element | null = null;
-    const DOCK_SELECTOR =
-      ".search-form, .post-create-form, .profile-edit-form, .comment-form, [data-dock-on-kb]";
-
-    const onFocusIn = (e: Event) => {
+    const handleFocus = (e: FocusEvent) => {
       const t = e.target as Element | null;
       if (!t) return;
-
-      const inSearch = !!t.closest(".search-form");
-      root.classList.toggle("kb-open-search", inSearch);
-
-      const dock = t.closest(DOCK_SELECTOR);
-      if (lastDockedEl && lastDockedEl !== dock) {
-        lastDockedEl.classList.remove("dock-at-kb");
-        lastDockedEl = null;
-      }
-      if (dock) {
-        dock.classList.add("dock-at-kb");
-        lastDockedEl = dock;
+      const isField =
+        t.tagName === "INPUT" ||
+        t.tagName === "TEXTAREA" ||
+        (t as HTMLElement).isContentEditable;
+      if (isField) {
+        root.classList.add("kb-open-any");
       }
     };
-
-    const onFocusOut = () => {
+    const handleBlur = (e: FocusEvent) => {
       setTimeout(() => {
         const active = document.activeElement as Element | null;
-        const inSearch = !!active?.closest?.(".search-form");
-        root.classList.toggle("kb-open-search", inSearch);
-
         const stillField =
           !!active &&
           (active.tagName === "INPUT" ||
             active.tagName === "TEXTAREA" ||
             (active as HTMLElement).isContentEditable);
-        if (!stillField && lastDockedEl) {
-          lastDockedEl.classList.remove("dock-at-kb");
-          lastDockedEl = null;
+        if (!stillField) {
+          root.classList.remove("kb-open-any");
         }
       }, 0);
     };
-
-    document.addEventListener("focusin", onFocusIn);
-    document.addEventListener("focusout", onFocusOut);
-
+    document.addEventListener("focusin", handleFocus);
+    document.addEventListener("focusout", handleBlur);
     return () => {
-      vv?.removeEventListener("resize", onVVChange);
-      vv?.removeEventListener("scroll", onVVChange);
-      document.removeEventListener("focusin", onFocusIn);
-      document.removeEventListener("focusout", onFocusOut);
-      document.removeEventListener("focusin", checkKeyboardFallback);
-      document.removeEventListener("focusout", checkKeyboardFallback);
+      document.removeEventListener("focusin", handleFocus);
+      document.removeEventListener("focusout", handleBlur);
       root.classList.remove("kb-open-any");
-      root.classList.remove("kb-open-search");
-      root.style.removeProperty("--kb-offset");
-    };
-  }, []);
-
-  // Debug overlay for mobile keyboard state
-  const [kbDebug, setKbDebug] = useState({
-    kbOpen: false,
-    kbOffset: 0,
-  });
-
-  useEffect(() => {
-    const updateDebug = () => {
-      const root = document.documentElement;
-      const kbOpen = root.classList.contains("kb-open-any");
-      const kbOffset =
-        parseInt(getComputedStyle(root).getPropertyValue("--kb-offset")) || 0;
-      setKbDebug({ kbOpen, kbOffset });
-    };
-    const vv = (window as any).visualViewport as VisualViewport | undefined;
-    vv?.addEventListener("resize", updateDebug);
-    vv?.addEventListener("scroll", updateDebug);
-    document.addEventListener("focusin", updateDebug);
-    document.addEventListener("focusout", updateDebug);
-    updateDebug();
-    return () => {
-      vv?.removeEventListener("resize", updateDebug);
-      vv?.removeEventListener("scroll", updateDebug);
-      document.removeEventListener("focusin", updateDebug);
-      document.removeEventListener("focusout", updateDebug);
     };
   }, []);
 
   return (
     <>
-      {/* Debug overlay for mobile keyboard state */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          width: "100vw",
-          background: "rgba(0,0,0,0.7)",
-          color: "#fff",
-          fontSize: 14,
-          zIndex: 99999,
-          pointerEvents: "none",
-          padding: "2px 8px",
-          textAlign: "center",
-        }}
-      >
-        kb-open-any: {kbDebug.kbOpen ? "ON" : "OFF"} | kb-offset:{" "}
-        {kbDebug.kbOffset}px
-      </div>
-
       <Toaster
         position="top-center"
         toastOptions={{
