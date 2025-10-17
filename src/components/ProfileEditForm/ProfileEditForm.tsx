@@ -25,27 +25,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
   onClose,
   triggerRef,
 }) => {
-  useEffect(() => {
-    const root = document.documentElement;
-    const el = inputRef.current;
-    if (!el) return;
-
-    const onFocus = () => {
-      root.classList.add("kb-open-any");
-    };
-    const onBlur = () => {
-      root.classList.remove("kb-open-any");
-    };
-
-    el.addEventListener("focus", onFocus);
-    el.addEventListener("blur", onBlur);
-
-    return () => {
-      el.removeEventListener("focus", onFocus);
-      el.removeEventListener("blur", onBlur);
-      root.classList.remove("kb-open-any");
-    };
-  }, []);
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const [username, setUsername] = useState(user?.username || "");

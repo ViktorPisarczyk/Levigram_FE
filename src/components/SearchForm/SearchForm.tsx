@@ -22,31 +22,6 @@ const SearchForm: React.FC<SearchFormProps> = ({ onClose, onSearch }) => {
     onClose();
   };
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const el = inputRef.current;
-    if (!el) return;
-
-    const onFocus = () => {
-      root.classList.add("kb-open");
-      root.classList.add("kb-open-any");
-    };
-    const onBlur = () => {
-      root.classList.remove("kb-open");
-      root.classList.remove("kb-open-any");
-    };
-
-    el.addEventListener("focus", onFocus);
-    el.addEventListener("blur", onBlur);
-
-    return () => {
-      el.removeEventListener("focus", onFocus);
-      el.removeEventListener("blur", onBlur);
-      root.classList.remove("kb-open");
-      root.classList.remove("kb-open-any");
-    };
-  }, []);
-
   return (
     <div ref={formRef} className="search-form">
       <form onSubmit={handleSubmit} className="form-content">
