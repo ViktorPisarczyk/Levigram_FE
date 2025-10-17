@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import heic2any from "heic2any";
 import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
@@ -144,6 +144,21 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     },
     triggerRef
   );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const textarea = formRef.current?.querySelector("textarea");
+    if (!textarea) return;
+    const handleFocus = () => root.classList.add("kb-open-any");
+    const handleBlur = () => root.classList.remove("kb-open-any");
+    textarea.addEventListener("focus", handleFocus);
+    textarea.addEventListener("blur", handleBlur);
+    return () => {
+      textarea.removeEventListener("focus", handleFocus);
+      textarea.removeEventListener("blur", handleBlur);
+      root.classList.remove("kb-open-any");
+    };
+  }, []);
 
   /* ---------------------------
      Upload-Helfer (Cloudinary, unsigned)

@@ -104,6 +104,21 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
     window.location.href = "/";
   };
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const input = formRef.current?.querySelector('input[type="text"]');
+    if (!input) return;
+    const handleFocus = () => root.classList.add("kb-open-any");
+    const handleBlur = () => root.classList.remove("kb-open-any");
+    input.addEventListener("focus", handleFocus);
+    input.addEventListener("blur", handleBlur);
+    return () => {
+      input.removeEventListener("focus", handleFocus);
+      input.removeEventListener("blur", handleBlur);
+      root.classList.remove("kb-open-any");
+    };
+  }, []);
+
   return (
     <div ref={formRef} className="profile-edit-form">
       <div className="form-header">
