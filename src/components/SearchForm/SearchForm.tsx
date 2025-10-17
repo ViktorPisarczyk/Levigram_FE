@@ -15,6 +15,24 @@ const SearchForm: React.FC<SearchFormProps> = ({ onClose, onSearch }) => {
 
   useClickOutside(formRef, () => onClose());
 
+  // Fallback: Setze kb-open-any beim Fokussieren des Inputs
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    const handleFocus = () => {
+      document.documentElement.classList.add("kb-open-any");
+    };
+    const handleBlur = () => {
+      document.documentElement.classList.remove("kb-open-any");
+    };
+    input.addEventListener("focus", handleFocus);
+    input.addEventListener("blur", handleBlur);
+    return () => {
+      input.removeEventListener("focus", handleFocus);
+      input.removeEventListener("blur", handleBlur);
+    };
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
