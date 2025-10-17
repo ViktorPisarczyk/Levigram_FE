@@ -366,7 +366,9 @@ const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
                   onClick={() => {
                     setShowDropDown(false);
                     if (onEdit) {
-                      onEdit();
+                      setTimeout(() => {
+                        onEdit();
+                      }, 30);
                     } else {
                       setIsEditing(true);
                     }
@@ -399,7 +401,6 @@ const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
         )}
       </div>
 
-      {/* Wenn onEdit übergeben wird, rendere nie die lokale EditForm */}
       {isEditing && !onEdit ? (
         <PostEditForm post={post} onCancel={() => setIsEditing(false)} />
       ) : (
