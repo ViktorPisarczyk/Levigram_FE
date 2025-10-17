@@ -338,6 +338,18 @@ const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
       : post.author?.profilePicture || defaultAvatar;
   const displayName = isOwnPost ? user?.username : post.author.username;
 
+  // Lock, um Race-Condition beim Öffnen/Schließen zu verhindern
+  const editLockRef = useRef(false);
+
+  useEffect(() => {
+    if (editLockRef.current) {
+      const t = setTimeout(() => {
+        editLockRef.current = false;
+      }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [editLockRef.current]);
+
   return (
     <div className="post-container">
       <div className="post-header">
@@ -366,9 +378,11 @@ const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
                   onClick={() => {
                     setShowDropDown(false);
                     if (onEdit) {
-                      setTimeout(() => {
-                        onEdit();
-                      }, 30);
+                      if (!editLockRef.current) {
+                        setTimeout(() => {
+                          onEdit();
+                        }, 30);
+                      }
                     } else {
                       setIsEditing(true);
                     }
