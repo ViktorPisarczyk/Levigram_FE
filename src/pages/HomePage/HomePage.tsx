@@ -93,26 +93,70 @@ const Home: React.FC = () => {
   const currentList = searchActive ? searchItems : feedItems;
 
   return (
-    <div className="home-page">
-      <div ref={scrollTopRef} />
-      <div ref={logoRef} className="logo" />
+    <>
+      <div className="home-page">
+        <div ref={scrollTopRef} />
+        <div ref={logoRef} className="logo" />
 
-      {/* Feed */}
-      <div className="post-feed">
-        {currentList.map((post, idx) => {
-          const isLast = !searchActive && idx === currentList.length - 1;
-          return (
-            <div key={post._id} ref={isLast ? handleObserver : null}>
-              <PostComponent post={post} />
-            </div>
-          );
-        })}
-        {isFetching && !searchActive && <p>Loading posts...</p>}
-        {!isFetching && searchActive && currentList.length === 0 && (
-          <p>No posts found for your search.</p>
+        {/* Feed */}
+        <div className="post-feed">
+          {currentList.map((post, idx) => {
+            const isLast = !searchActive && idx === currentList.length - 1;
+            return (
+              <div key={post._id} ref={isLast ? handleObserver : null}>
+                <PostComponent post={post} />
+              </div>
+            );
+          })}
+          {isFetching && !searchActive && <p>Loading posts...</p>}
+          {!isFetching && searchActive && currentList.length === 0 && (
+            <p>No posts found for your search.</p>
+          )}
+        </div>
+
+        {isPostFormOpen && (
+          <>
+            <div
+              className="blur-overlay"
+              onClick={(e) => {
+                e.stopPropagation();
+                dispatch(closePostForm());
+              }}
+            />
+
+            <PostCreateForm onClose={() => dispatch(closePostForm())} />
+          </>
+        )}
+
+        {isProfileEditOpen && (
+          <>
+            <div
+              className="blur-overlay"
+              onClick={(e) => {
+                e.stopPropagation();
+                dispatch(closeProfileEdit());
+              }}
+            />
+            <ProfileEditForm onClose={() => dispatch(closeProfileEdit())} />
+          </>
+        )}
+
+        {isSearchFormOpen && (
+          <>
+            <div
+              className="blur-overlay"
+              onClick={(e) => {
+                e.stopPropagation();
+                dispatch(closeSearchForm());
+              }}
+            />
+            <SearchForm
+              onClose={() => dispatch(closeSearchForm())}
+              onSearch={handleSearch}
+            />
+          </>
         )}
       </div>
-
       <Navigation
         postButtonRef={postButtonRef}
         profileButtonRef={profileButtonRef}
@@ -129,50 +173,7 @@ const Home: React.FC = () => {
           );
         }}
       />
-
-      {isPostFormOpen && (
-        <>
-          <div
-            className="blur-overlay"
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(closePostForm());
-            }}
-          />
-
-          <PostCreateForm onClose={() => dispatch(closePostForm())} />
-        </>
-      )}
-
-      {isProfileEditOpen && (
-        <>
-          <div
-            className="blur-overlay"
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(closeProfileEdit());
-            }}
-          />
-          <ProfileEditForm onClose={() => dispatch(closeProfileEdit())} />
-        </>
-      )}
-
-      {isSearchFormOpen && (
-        <>
-          <div
-            className="blur-overlay"
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(closeSearchForm());
-            }}
-          />
-          <SearchForm
-            onClose={() => dispatch(closeSearchForm())}
-            onSearch={handleSearch}
-          />
-        </>
-      )}
-    </div>
+    </>
   );
 };
 
