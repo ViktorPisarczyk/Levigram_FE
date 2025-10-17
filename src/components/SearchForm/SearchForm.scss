@@ -16,7 +16,7 @@
   will-change: bottom;
 
   html.kb-open-any & {
-    bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
+    bottom: var(--kb-offset, 0px);
   }
 
   max-height: calc(100dvh - 10px - env(safe-area-inset-top, 0px));
