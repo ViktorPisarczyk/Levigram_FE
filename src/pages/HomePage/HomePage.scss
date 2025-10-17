@@ -59,28 +59,6 @@ html.ui-overlay-open .dropdown-menu {
   pointer-events: none !important;
 }
 
-.refresh-indicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem 0;
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: var(--tertiary, #3498db);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Wenn irgendein Formular offen ist, darf man nicht „durchklicken“ */
 html.ui-overlay-open .post-feed,
 html.ui-overlay-open .media-carousel,
