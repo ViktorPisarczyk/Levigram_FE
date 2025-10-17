@@ -9,6 +9,8 @@ import {
   uploadPosterDataUrl,
   CLOUDINARY,
 } from "../../cloudinary";
+import { useDispatch } from "react-redux";
+import { postsApi } from "../../redux/apiSlice";
 
 /* ---------------------------
    Props & lokale Typen
@@ -136,6 +138,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const dispatch = useDispatch();
 
   useClickOutside(
     formRef,
@@ -282,6 +285,9 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
       const uploads = await uploadMediaFiles(mediaFiles);
 
       await createPost({ content, media: uploads }).unwrap();
+
+      // Feed-Query invalidieren, damit der Feed neu geladen wird
+      dispatch(postsApi.util.invalidateTags([{ type: "FeedPage", id: 1 }]));
 
       setContent("");
       setMediaFiles([]);

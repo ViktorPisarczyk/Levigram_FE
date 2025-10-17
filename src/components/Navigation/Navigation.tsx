@@ -39,6 +39,12 @@ const Navigation: React.FC<NavigationProps> = ({
   const isSearchFormOpen = useSelector(
     (state: RootState) => state.ui.isSearchFormOpen
   );
+  const isPostFormOpen = useSelector(
+    (state: RootState) => state.ui.isPostFormOpen
+  );
+  const isProfileEditOpen = useSelector(
+    (state: RootState) => state.ui.isProfileEditOpen
+  );
 
   const [recentlyClosed, setRecentlyClosed] = useState(false);
   const prevIsSearchFormOpen = useRef(isSearchFormOpen);
@@ -54,6 +60,12 @@ const Navigation: React.FC<NavigationProps> = ({
   const handleSearchClick = () => {
     if (recentlyClosed) return;
     dispatch(toggleSearchForm());
+  };
+  const handlePostClick = () => {
+    dispatch(togglePostForm());
+  };
+  const handleProfileClick = () => {
+    dispatch(toggleProfileEdit());
   };
 
   return (
@@ -72,7 +84,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
         <button
           ref={postButtonRef}
-          onClick={() => dispatch(togglePostForm())}
+          onClick={handlePostClick}
           className="post-button"
           aria-label="Post"
         >
@@ -87,7 +99,7 @@ const Navigation: React.FC<NavigationProps> = ({
         </button>
         <button
           ref={profileButtonRef}
-          onClick={() => dispatch(toggleProfileEdit())}
+          onClick={handleProfileClick}
           className="nav-button"
           aria-label="Profile"
         >
