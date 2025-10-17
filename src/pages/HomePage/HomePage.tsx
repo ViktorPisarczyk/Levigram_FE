@@ -6,6 +6,7 @@ import type { FeedItem } from "../../types/models";
 
 import "./HomePage.scss";
 import Navigation from "../../components/Navigation/Navigation";
+
 import PostCreateForm from "../../components/Post/PostCreateForm";
 import ProfileEditForm from "../../components/ProfileEditForm/ProfileEditForm";
 import {
@@ -92,6 +93,27 @@ const Home: React.FC = () => {
 
   const currentList = searchActive ? searchItems : feedItems;
 
+  // State: Ist ein Eingabefeld (input/textarea/contenteditable) fokussiert?
+  const [inputFocused, setInputFocused] = useState(false);
+  useEffect(() => {
+    const checkFocus = () => {
+      const active = document.activeElement as Element | null;
+      setInputFocused(
+        !!active &&
+          (active.tagName === "INPUT" ||
+            active.tagName === "TEXTAREA" ||
+            (active as HTMLElement).isContentEditable)
+      );
+    };
+    document.addEventListener("focusin", checkFocus);
+    document.addEventListener("focusout", checkFocus);
+    checkFocus();
+    return () => {
+      document.removeEventListener("focusin", checkFocus);
+      document.removeEventListener("focusout", checkFocus);
+    };
+  }, []);
+
   return (
     <>
       <div className="home-page">
@@ -157,22 +179,25 @@ const Home: React.FC = () => {
           </>
         )}
       </div>
-      <Navigation
-        postButtonRef={postButtonRef}
-        profileButtonRef={profileButtonRef}
-        onHomeClick={() => {
-          setSearchActive(false);
-          setSearchItems([]);
-          scrollTopRef.current?.scrollIntoView({ behavior: "smooth" });
-        }}
-        onToggleDarkMode={() => {
-          document.body.classList.toggle("dark");
-          localStorage.setItem(
-            "theme",
-            document.body.classList.contains("dark") ? "dark" : "light"
-          );
-        }}
-      />
+      {/* Navigation nur anzeigen, wenn kein Input fokussiert ist */}
+      {!inputFocused && (
+        <Navigation
+          postButtonRef={postButtonRef}
+          profileButtonRef={profileButtonRef}
+          onHomeClick={() => {
+            setSearchActive(false);
+            setSearchItems([]);
+            scrollTopRef.current?.scrollIntoView({ behavior: "smooth" });
+          }}
+          onToggleDarkMode={() => {
+            document.body.classList.toggle("dark");
+            localStorage.setItem(
+              "theme",
+              document.body.classList.contains("dark") ? "dark" : "light"
+            );
+          }}
+        />
+      )}
     </>
   );
 };
