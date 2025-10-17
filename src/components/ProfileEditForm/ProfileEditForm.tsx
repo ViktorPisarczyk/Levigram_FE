@@ -23,8 +23,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
   triggerRef,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
-
+  const { user } = useSelector((s: RootState) => s.auth);
   const [username, setUsername] = useState(user?.username || "");
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -34,8 +33,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const formRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
   useClickOutside(
     formRef,
     () => {
@@ -44,32 +41,28 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
     triggerRef
   );
 
-  // Live-Vorschau für neu gewähltes Bild (Revoke nicht vergessen)
   useEffect(() => {
-    if (!profileImage) return;
-    const objectUrl = URL.createObjectURL(profileImage);
-    setPreviewUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
+    if (profileImage) {
+      const objectUrl = URL.createObjectURL(profileImage);
+      setPreviewUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
   }, [profileImage]);
 
-  // Wenn Serverseitig das Profilbild aktualisiert wurde, nachziehen
   useEffect(() => {
     if (!profileImage && user?.profilePicture) {
       setPreviewUrl(user.profilePicture);
     }
-  }, [user?.profilePicture, profileImage]);
+  }, [user?.profilePicture]);
 
-  // Username syncen, falls sich im Store was ändert
   useEffect(() => {
     if (user?.username && user.username !== username) {
       setUsername(user.username);
     }
-  }, [user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.username]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setProfileImage(e.target.files[0]);
-    }
+    if (e.target.files?.length) setProfileImage(e.target.files[0]);
   };
 
   const handleSubmit = async () => {
@@ -80,6 +73,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       let profileImageUrl: string | undefined = user?.profilePicture;
 
       if (profileImage) {
+        // EIN Upload-Call, sauber unsigned:
         const up = await uploadToCloudinary(
           profileImage,
           CLOUDINARY.folderProfiles
@@ -94,8 +88,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
       if (updateProfileAsync.fulfilled.match(result)) {
         toast.success("Profil erfolgreich aktualisiert!");
         onClose();
-      } else {
-        toast.error("Profil konnte nicht gespeichert werden.");
       }
     } catch (err) {
       console.error("Fehler beim Speichern:", err);
@@ -142,7 +134,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         />
 
         <input
-          ref={inputRef}
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}

@@ -1,8 +1,3 @@
-/* Test: Blende Navigation aus, wenn ein Input/Textarea fokussiert ist */
-input:focus ~ .bottom-nav,
-textarea:focus ~ .bottom-nav {
-  transform: translateY(100%) !important;
-}
 *,
 *::before,
 *::after {
@@ -71,7 +66,6 @@ body {
   background-attachment: fixed;
   font-family: "Inter", sans-serif;
   -webkit-tap-highlight-color: transparent;
-  padding-bottom: var(--nav-total-h);
 }
 
 input,

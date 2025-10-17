@@ -1,95 +1,61 @@
 export const isCloudinary = (url: string) => /res\.cloudinary\.com/.test(url);
 
 export const CLOUDINARY = {
-  cloudName: "dobaxwfhx",
-  uploadPreset: "levi_unsigned",
+  cloudName: (import.meta as any).env?.VITE_CLOUDINARY_NAME || "dobaxwfhx",
+  uploadPreset:
+    (import.meta as any).env?.VITE_CLOUDINARY_UPLOAD_PRESET || "levi_unsigned",
   folderPosts: "uploads/posts",
   folderPosters: "uploads/posts/posters",
   folderProfiles: "uploads/profiles",
 };
 
-// Einfache Response-Typen
-export type CloudinaryUploadResponse = {
-  secure_url: string;
-  public_id: string;
-  resource_type: "image" | "video" | "raw" | string;
-  width?: number;
-  height?: number;
-  format?: string;
-};
-
-// Generische Upload-Funktion (auto = erkennt image/video)
-export async function uploadToCloudinary(
-  file: File,
-  folder = CLOUDINARY.folderPosts
-): Promise<CloudinaryUploadResponse> {
-  const { cloudName, uploadPreset } = CLOUDINARY;
-
+// -------- Upload: File (Bild/Video) --------
+export async function uploadToCloudinary(file: File, folder: string) {
   const fd = new FormData();
   fd.append("file", file);
-  fd.append("upload_preset", uploadPreset);
+  fd.append("upload_preset", CLOUDINARY.uploadPreset);
   fd.append("folder", folder);
-  fd.append("use_filename", "true");
-  fd.append("unique_filename", "true");
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-    {
-      method: "POST",
-      body: fd,
-    }
-  );
-
+  const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/auto/upload`;
+  const res = await fetch(endpoint, { method: "POST", body: fd });
   const data = await res.json();
-  if (!res.ok || !data?.secure_url) {
-    console.error("Cloudinary upload failed:", data);
+
+  if (!res.ok || !data.secure_url) {
     throw new Error(
-      data?.error?.message || data?.message || `Upload failed (${res.status})`
+      data.error?.message || data.message || "Cloudinary upload failed"
     );
   }
-  return data as CloudinaryUploadResponse;
+  return data as {
+    secure_url: string;
+    public_id: string;
+    resource_type: "image" | "video" | "raw";
+    [key: string]: any;
+  };
 }
 
-// Poster-Upload aus dataURL (immer image/upload)
-export async function uploadPosterDataUrl(
-  dataUrl: string,
-  folder = CLOUDINARY.folderPosters
-): Promise<CloudinaryUploadResponse> {
-  const { cloudName, uploadPreset } = CLOUDINARY;
-
+// -------- Upload: Poster (DataURL) --------
+export async function uploadPosterDataUrl(dataUrl: string) {
   const fd = new FormData();
   fd.append("file", dataUrl);
-  fd.append("upload_preset", uploadPreset);
-  fd.append("folder", folder);
-  fd.append("use_filename", "true");
-  fd.append("unique_filename", "true");
+  fd.append("upload_preset", CLOUDINARY.uploadPreset);
+  fd.append("folder", CLOUDINARY.folderPosters);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-    {
-      method: "POST",
-      body: fd,
-    }
-  );
-
+  const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/image/upload`;
+  const res = await fetch(endpoint, { method: "POST", body: fd });
   const data = await res.json();
-  if (!res.ok || !data?.secure_url) {
-    console.error("Cloudinary poster upload failed:", data);
+
+  if (!res.ok || !data.secure_url) {
     throw new Error(
-      data?.error?.message ||
-        data?.message ||
-        `Poster upload failed (${res.status})`
+      data.error?.message || data.message || "Cloudinary poster upload failed"
     );
   }
-  return data as CloudinaryUploadResponse;
+  return data as { secure_url: string; public_id: string; [key: string]: any };
 }
 
-// Optional: Delivery-URL Builder (Transformationen)
+// -------- Delivery Helper (Transform-URL bauen) --------
 export function buildCloudinaryUrl(url: string, transforms: string): string {
   if (!/res\.cloudinary\.com/.test(url)) return url;
   const parts = url.split("/upload/");
   if (parts.length !== 2) return url;
-  const base = parts[0];
-  const rest = parts[1];
-  return `${base}/upload/${transforms}/${rest}`;
+  return `${parts[0]}/upload/${transforms}/${parts[1]}`;
 }
