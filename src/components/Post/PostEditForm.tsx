@@ -1,15 +1,14 @@
 import React, { useState, useRef } from "react";
+import heic2any from "heic2any";
 import MediaPreviewCarousel from "../MediaPreviewCarousel/MediaPreviewCarousel";
 import { useClickOutside } from "../../hooks/useClickOutside";
-import heic2any from "heic2any";
 import "./PostEditForm.scss";
 import {
   uploadToCloudinary,
   uploadPosterDataUrl,
   CLOUDINARY,
 } from "../../cloudinary";
-
-import type { Post } from "../../types/models";
+import type { FeedItem } from "../../types/models";
 import { useEditPostMutation } from "../../redux/apiSlice";
 
 interface MediaFile {
@@ -19,12 +18,105 @@ interface MediaFile {
 }
 
 interface PostEditFormProps {
-  post: Post;
+  post: FeedItem;
   onCancel: () => void;
 }
 
+const MAX_IMG_DIM = 1600;
+const MAX_POSTER_DIM = 720;
+const DEFAULT_Q = 0.6;
+const SAVEDATA_Q = 0.5;
+
+const supportsWebP = (() => {
+  try {
+    return typeof document !== "undefined"
+      ? !!document
+          .createElement("canvas")
+          .toDataURL("image/webp")
+          .startsWith("data:image/webp")
+      : true;
+  } catch {
+    return false;
+  }
+})();
+
+function getQuality(): number {
+  const nav = navigator as any;
+  const saveData = !!nav?.connection?.saveData;
+  return saveData ? SAVEDATA_Q : DEFAULT_Q;
+}
+
+async function imageToBitmap(file: File | Blob): Promise<ImageBitmap> {
+  const blob =
+    file instanceof Blob
+      ? file
+      : new Blob([file], { type: (file as File).type });
+  return await createImageBitmap(blob);
+}
+function scaleDims(w: number, h: number, max: number) {
+  if (w <= max && h <= max) return { w, h };
+  const ratio = w / h;
+  if (w > h) return { w: max, h: Math.round(max / ratio) };
+  return { w: Math.round(max * ratio), h: max };
+}
+async function compressImageToWebP(
+  file: File | Blob,
+  maxDim = MAX_IMG_DIM,
+  quality = getQuality()
+): Promise<File> {
+  const bmp = await imageToBitmap(file);
+  const { w, h } = scaleDims(bmp.width, bmp.height, maxDim);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d", { alpha: true })!;
+  ctx.drawImage(bmp, 0, 0, w, h);
+  const mime = supportsWebP ? "image/webp" : "image/jpeg";
+  const dataUrl = canvas.toDataURL(mime, quality);
+  const bin = atob(dataUrl.split(",")[1]);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  const blob = new Blob([arr], { type: mime });
+  const ext = supportsWebP ? "webp" : "jpg";
+  return new File([blob], `upload.${ext}`, { type: blob.type });
+}
+async function makePosterFromVideo(
+  url: string,
+  maxDim = MAX_POSTER_DIM,
+  quality = getQuality()
+): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.src = url;
+    video.crossOrigin = "anonymous";
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    const onReady = () => {
+      try {
+        const vw = video.videoWidth || 1280;
+        const vh = video.videoHeight || 720;
+        const { w, h } = scaleDims(vw, vh, maxDim);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(video, 0, 0, w, h);
+        const mime = supportsWebP ? "image/webp" : "image/jpeg";
+        const dataUrl = canvas.toDataURL(mime, quality);
+        resolve(dataUrl);
+      } catch {
+        resolve(undefined);
+      }
+    };
+    video.addEventListener("loadeddata", onReady, { once: true });
+    video.addEventListener("error", () => resolve(undefined), { once: true });
+    video.load();
+  });
+}
+
 const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
-  const [editPost, { isLoading: isSaving }] = useEditPostMutation();
+  const [editPost] = useEditPostMutation();
 
   const [content, setContent] = useState(post.content);
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>(
@@ -34,69 +126,23 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   const formRef = useRef<HTMLFormElement>(null);
 
   useClickOutside(formRef, () => {
-    if (!uploading && !isSaving) onCancel();
+    if (!uploading) onCancel();
   });
-
-  const generatePoster = (url: string): Promise<string | undefined> => {
-    return new Promise((resolve) => {
-      const video = document.createElement("video");
-      video.src = url;
-      video.crossOrigin = "anonymous";
-      video.muted = true;
-      video.playsInline = true;
-      video.preload = "auto";
-
-      video.addEventListener("loadedmetadata", () => {
-        video.currentTime = 1;
-      });
-
-      video.addEventListener("seeked", () => {
-        try {
-          const canvas = document.createElement("canvas");
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/jpeg"));
-          } else {
-            resolve(undefined);
-          }
-        } catch (err) {
-          console.error("❌ Fehler beim Zeichnen des Posters", err);
-          resolve(undefined);
-        }
-      });
-
-      video.addEventListener("error", () => {
-        console.error("❌ Fehler beim Laden des Videos für Poster", url);
-        resolve(undefined);
-      });
-    });
-  };
-
-  const uploadPosterImage = async (dataUrl: string): Promise<string> => {
-    const res = await uploadPosterDataUrl(dataUrl);
-    return res.secure_url;
-  };
 
   const uploadMediaFiles = async (files: MediaFile[]) => {
     const uploads = await Promise.all(
       files.map(async (media) => {
-        // Datei hochladen
         const up = await uploadToCloudinary(
           media.rawFile!,
           CLOUDINARY.folderPosts
         );
-
-        // Poster ggf. separat hochladen (wenn wir ein dataURL-Poster erzeugt haben)
         let finalPoster = media.poster;
         if (finalPoster?.startsWith("data:")) {
           try {
             const posterRes = await uploadPosterDataUrl(finalPoster);
             finalPoster = posterRes.secure_url;
-          } catch (e) {
-            console.warn("Poster upload failed:", e);
+          } catch (err) {
+            console.warn("Poster upload failed:", err);
           }
         }
         return { url: up.secure_url, poster: finalPoster };
@@ -111,49 +157,57 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
 
   const handleMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-
     const files = Array.from(e.target.files);
-    const processedFiles: MediaFile[] = [];
-
+    const processed: MediaFile[] = [];
     for (const file of files) {
-      if (file.type === "image/heic" || file.name.endsWith(".heic")) {
+      if (file.type === "image/heic" || /\.heic$/i.test(file.name)) {
         try {
-          const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-          const converted = new File(
-            [blob as BlobPart],
-            file.name.replace(/\.heic$/, ".jpg"),
-            { type: "image/jpeg" }
-          );
-          processedFiles.push({
-            url: URL.createObjectURL(converted),
-            rawFile: converted,
+          const blob = (await heic2any({
+            blob: file,
+            toType: "image/jpeg",
+          })) as Blob;
+          const jpeg = new File([blob], file.name.replace(/\.heic$/i, ".jpg"), {
+            type: "image/jpeg",
+          });
+          const compressed = await compressImageToWebP(jpeg, MAX_IMG_DIM);
+          processed.push({
+            url: URL.createObjectURL(compressed),
+            rawFile: compressed,
           });
         } catch (err) {
           console.error("HEIC conversion failed", err);
         }
-      } else {
+        continue;
+      }
+      if (file.type.startsWith("image/")) {
+        try {
+          const compressed = await compressImageToWebP(file, MAX_IMG_DIM);
+          processed.push({
+            url: URL.createObjectURL(compressed),
+            rawFile: compressed,
+          });
+        } catch {
+          processed.push({ url: URL.createObjectURL(file), rawFile: file });
+        }
+        continue;
+      }
+      if (file.type.startsWith("video/")) {
         const url = URL.createObjectURL(file);
         let poster: string | undefined;
-
-        if (file.type.startsWith("video/")) {
-          try {
-            poster = await generatePoster(url);
-          } catch (err) {
-            console.error("Poster generation failed:", err);
-          }
-        }
-
-        processedFiles.push({ url, rawFile: file, poster });
+        try {
+          poster = await makePosterFromVideo(url, MAX_POSTER_DIM);
+        } catch {}
+        processed.push({ url, rawFile: file, poster });
+        continue;
       }
+      processed.push({ url: URL.createObjectURL(file), rawFile: file });
     }
-
-    setMediaFiles((prev) => [...prev, ...processedFiles]);
+    setMediaFiles((prev) => [...prev, ...processed]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
-
     try {
       const newMedia = mediaFiles.filter((m) => m.rawFile);
       const existingMedia = mediaFiles.filter((m) => !m.rawFile);
@@ -175,7 +229,7 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
   };
 
   return (
-    <div className="post-edit-form dock-above-nav">
+    <div className="post-edit-form">
       <form ref={formRef} onSubmit={handleSubmit}>
         <div className="form-content">
           <textarea
@@ -183,7 +237,6 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
             onChange={(e) => setContent(e.target.value)}
             placeholder="Beitrag bearbeiten..."
           />
-
           {mediaFiles.length > 0 && (
             <div className="media-preview-wrapper">
               <MediaPreviewCarousel
@@ -192,7 +245,6 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
               />
             </div>
           )}
-
           <label htmlFor="edit-media-upload" className="upload-button">
             Bilder/Videos hochladen
           </label>
@@ -204,27 +256,25 @@ const PostEditForm: React.FC<PostEditFormProps> = ({ post, onCancel }) => {
             onChange={handleMediaChange}
             style={{ display: "none" }}
           />
-
           <div className="actions">
             <button
               type="button"
               onClick={onCancel}
-              disabled={uploading || isSaving}
+              disabled={uploading}
               className="cancel-button"
             >
               Abbrechen
             </button>
             <button
               type="submit"
-              disabled={uploading || isSaving}
+              disabled={uploading}
               className="submit-button"
             >
               Speichern
             </button>
           </div>
         </div>
-
-        {(uploading || isSaving) && (
+        {uploading && (
           <div className="uploading-overlay">
             <div className="spinner" />
             <p className="loading-text">Beitrag wird aktualisiert...</p>

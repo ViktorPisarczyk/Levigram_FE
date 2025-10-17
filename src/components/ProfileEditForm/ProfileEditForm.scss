@@ -16,6 +16,10 @@
   display: flex;
   flex-direction: column;
 
+  html.kb-open-any & {
+    bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
+  }
+
   .form-header {
     display: flex;
     justify-content: flex-end;

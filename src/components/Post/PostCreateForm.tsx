@@ -90,7 +90,10 @@ async function compressImageToWebP(
 
   const mime = supportsWebP ? "image/webp" : "image/jpeg";
   const dataUrl = canvas.toDataURL(mime, quality);
-  const blob = dataURLtoBlob(dataUrl);
+  const bin = atob(dataUrl.split(",")[1]);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  const blob = new Blob([arr], { type: mime });
   const ext = supportsWebP ? "webp" : "jpg";
   return new File([blob], `upload.${ext}`, { type: blob.type });
 }
@@ -138,7 +141,6 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   triggerRef,
 }) => {
   const [createPost, { isLoading: creating }] = useCreatePostMutation();
-
   const [content, setContent] = useState("");
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -153,7 +155,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   );
 
   /* ---------------------------
-     Upload-Helfer (Cloudinary)
+     Upload-Helfer (Cloudinary, unsigned)
   ---------------------------- */
   const uploadPosterImage = async (dataUrl: string): Promise<string> => {
     const res = await uploadPosterDataUrl(dataUrl);
@@ -169,16 +171,17 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
           CLOUDINARY.folderPosts
         );
 
-        // Poster ggf. separat hochladen (wenn wir ein dataURL-Poster erzeugt haben)
+        // Poster ggf. separat hochladen (falls dataURL)
         let finalPoster = media.poster;
         if (finalPoster?.startsWith("data:")) {
           try {
             const posterRes = await uploadPosterDataUrl(finalPoster);
             finalPoster = posterRes.secure_url;
-          } catch (e) {
-            console.warn("Poster upload failed:", e);
+          } catch (err) {
+            console.warn("Poster upload failed:", err);
           }
         }
+
         return { url: up.secure_url, poster: finalPoster };
       })
     );
@@ -259,15 +262,8 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     setUploading(true);
     try {
       const uploads = await uploadMediaFiles(mediaFiles);
-      if (uploads.some((u) => !/^https?:\/\//.test(u.url))) {
-        console.error(
-          "Mindestens eine URL ist keine https-Cloudinary-URL:",
-          uploads
-        );
-        throw new Error("Ungültige Mediens URLs nach Upload");
-      }
-
       await createPost({ content, media: uploads }).unwrap();
+
       setContent("");
       setMediaFiles([]);
       onClose();
@@ -279,7 +275,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   };
 
   return (
-    <div ref={formRef} className="post-create-form">
+    <div ref={formRef} className="post-create-form dock-above-nav">
       <div className="form-content">
         <textarea
           placeholder="Schreibe etwas..."

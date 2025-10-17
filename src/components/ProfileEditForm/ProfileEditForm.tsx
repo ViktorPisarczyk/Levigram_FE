@@ -6,6 +6,7 @@ import {
   updateProfileAsync,
   logout,
 } from "../../redux/features/auth/authSlice";
+import { uploadToCloudinary, CLOUDINARY } from "../../cloudinary";
 
 import { CiLogout } from "react-icons/ci";
 
@@ -37,27 +38,6 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
 
   const formRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const root = document.documentElement;
-    const el = inputRef.current;
-    if (!el) return;
-
-    const onFocus = () => {
-      root.classList.add("kb-open-any");
-    };
-    const onBlur = () => {
-      root.classList.remove("kb-open-any");
-    };
-
-    el.addEventListener("focus", onFocus);
-    el.addEventListener("blur", onBlur);
-
-    return () => {
-      el.removeEventListener("focus", onFocus);
-      el.removeEventListener("blur", onBlur);
-      root.classList.remove("kb-open-any");
-    };
-  }, []);
   useClickOutside(
     formRef,
     () => {
@@ -106,6 +86,11 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         const cloudName = import.meta.env.VITE_CLOUDINARY_NAME;
         const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
         const formData = new FormData();
+        const up = await uploadToCloudinary(
+          profileImage,
+          CLOUDINARY.folderProfiles
+        );
+        profileImageUrl = up.secure_url;
         formData.append("file", profileImage);
         formData.append("upload_preset", uploadPreset);
         formData.append("folder", "uploads/profiles");

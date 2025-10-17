@@ -21,6 +21,10 @@
   max-height: calc(100dvh - 10px - env(safe-area-inset-top)); /* iOS dvh */
   overscroll-behavior: contain;
 
+  html.kb-open-any & {
+    padding-bottom: calc(var(--kb-offset, 0px) + 12px);
+  }
+
   form {
     display: flex;
     flex-direction: column;
@@ -38,10 +42,6 @@
     align-items: center;
     gap: 14px;
     padding-bottom: max(env(safe-area-inset-bottom), 8px);
-
-    html.kb-open-any & {
-      padding-bottom: calc(var(--kb-offset, 0px) + 12px);
-    }
   }
 
   .media-preview-wrapper {
@@ -178,8 +178,4 @@
       }
     }
   }
-}
-
-html.kb-open-any .post-edit-form {
-  bottom: max(var(--nav-total-h), var(--kb-offset, 0px));
 }
