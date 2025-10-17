@@ -99,6 +99,32 @@ const App: React.FC = () => {
     const root = document.documentElement;
     const vv = (window as any).visualViewport as VisualViewport | undefined;
 
+    // Fallback: Setze kb-open-any, wenn ein Input/Textarea fokussiert ist (z.B. iOS Safari bei input)
+    const checkKeyboardFallback = () => {
+      const active = document.activeElement as Element | null;
+      const isField =
+        !!active &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          (active as HTMLElement).isContentEditable);
+      // Wenn visualViewport-Offset > 0, dann wie gehabt
+      let offset = 0;
+      if (vv) {
+        offset = Math.max(0, window.innerHeight - vv.height);
+      }
+      // Fallback: Wenn ein Feld fokussiert ist, aber offset == 0, dann setze einen Minimalwert
+      if (isField && offset === 0) {
+        offset = 3; // Minimalwert, damit CSS greift
+      }
+      root.style.setProperty("--kb-offset", `${Math.round(offset)}px`);
+      if (isField || offset > 0) {
+        root.classList.add("kb-open-any");
+      } else {
+        root.classList.remove("kb-open-any");
+        root.classList.remove("kb-open-search");
+      }
+    };
+
     const onVVChange = () => {
       if (!vv) return;
       const offset = Math.max(0, window.innerHeight - vv.height);
@@ -113,6 +139,11 @@ const App: React.FC = () => {
     vv?.addEventListener("resize", onVVChange);
     vv?.addEventListener("scroll", onVVChange);
     onVVChange();
+    // Fallback-Listener für focus/blur
+    document.addEventListener("focusin", checkKeyboardFallback);
+    document.addEventListener("focusout", checkKeyboardFallback);
+    // Initial prüfen
+    checkKeyboardFallback();
 
     let lastDockedEl: Element | null = null;
     const DOCK_SELECTOR =
@@ -162,6 +193,8 @@ const App: React.FC = () => {
       vv?.removeEventListener("scroll", onVVChange);
       document.removeEventListener("focusin", onFocusIn);
       document.removeEventListener("focusout", onFocusOut);
+      document.removeEventListener("focusin", checkKeyboardFallback);
+      document.removeEventListener("focusout", checkKeyboardFallback);
       root.classList.remove("kb-open-any");
       root.classList.remove("kb-open-search");
       root.style.removeProperty("--kb-offset");
