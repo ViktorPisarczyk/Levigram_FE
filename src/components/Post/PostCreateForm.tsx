@@ -51,15 +51,6 @@ function getQuality(): number {
   return saveData ? SAVEDATA_Q : DEFAULT_Q;
 }
 
-function dataURLtoBlob(dataUrl: string): Blob {
-  const [header, data] = dataUrl.split(",");
-  const mime = header.match(/data:(.*?);/)?.[1] || "image/jpeg";
-  const bin = atob(data);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return new Blob([arr], { type: mime });
-}
-
 async function imageToBitmap(file: File | Blob): Promise<ImageBitmap> {
   const blob =
     file instanceof Blob
@@ -163,15 +154,14 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
   };
 
   const uploadMediaFiles = async (files: MediaFile[]) => {
+    const filesWithRaw = files.filter((m) => !!m.rawFile);
     const uploads = await Promise.all(
-      files.map(async (media) => {
-        // Datei hochladen
+      filesWithRaw.map(async (media) => {
         const up = await uploadToCloudinary(
           media.rawFile!,
           CLOUDINARY.folderPosts
         );
 
-        // Poster ggf. separat hochladen (falls dataURL)
         let finalPoster = media.poster;
         if (finalPoster?.startsWith("data:")) {
           try {
@@ -181,11 +171,14 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
             console.warn("Poster upload failed:", err);
           }
         }
-
         return { url: up.secure_url, poster: finalPoster };
       })
     );
-    return uploads;
+
+    const passthrough = files
+      .filter((m) => !m.rawFile)
+      .map(({ url, poster }) => ({ url, poster }));
+    return [...passthrough, ...uploads];
   };
 
   /* ---------------------------
@@ -262,13 +255,19 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     setUploading(true);
     try {
       const uploads = await uploadMediaFiles(mediaFiles);
+
       await createPost({ content, media: uploads }).unwrap();
 
       setContent("");
       setMediaFiles([]);
       onClose();
-    } catch (err) {
-      console.error("Upload/Create error:", err);
+    } catch (err: any) {
+      console.error("Upload/Create error:", err?.data || err?.message || err);
+      alert(
+        err?.data?.message ||
+          err?.message ||
+          "Post konnte nicht erstellt werden."
+      );
     } finally {
       setUploading(false);
     }

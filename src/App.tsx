@@ -168,8 +168,56 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Debug overlay for mobile keyboard state
+  const [kbDebug, setKbDebug] = useState({
+    kbOpen: false,
+    kbOffset: 0,
+  });
+
+  useEffect(() => {
+    const updateDebug = () => {
+      const root = document.documentElement;
+      const kbOpen = root.classList.contains("kb-open-any");
+      const kbOffset =
+        parseInt(getComputedStyle(root).getPropertyValue("--kb-offset")) || 0;
+      setKbDebug({ kbOpen, kbOffset });
+    };
+    const vv = (window as any).visualViewport as VisualViewport | undefined;
+    vv?.addEventListener("resize", updateDebug);
+    vv?.addEventListener("scroll", updateDebug);
+    document.addEventListener("focusin", updateDebug);
+    document.addEventListener("focusout", updateDebug);
+    updateDebug();
+    return () => {
+      vv?.removeEventListener("resize", updateDebug);
+      vv?.removeEventListener("scroll", updateDebug);
+      document.removeEventListener("focusin", updateDebug);
+      document.removeEventListener("focusout", updateDebug);
+    };
+  }, []);
+
   return (
     <>
+      {/* Debug overlay for mobile keyboard state */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          width: "100vw",
+          background: "rgba(0,0,0,0.7)",
+          color: "#fff",
+          fontSize: 14,
+          zIndex: 99999,
+          pointerEvents: "none",
+          padding: "2px 8px",
+          textAlign: "center",
+        }}
+      >
+        kb-open-any: {kbDebug.kbOpen ? "ON" : "OFF"} | kb-offset:{" "}
+        {kbDebug.kbOffset}px
+      </div>
+
       <Toaster
         position="top-center"
         toastOptions={{

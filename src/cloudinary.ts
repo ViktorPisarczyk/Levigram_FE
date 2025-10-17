@@ -1,55 +1,94 @@
 export const isCloudinary = (url: string) => /res\.cloudinary\.com/.test(url);
 
-// src/cloudinary.ts
 export const CLOUDINARY = {
   cloudName: "dobaxwfhx",
-  unsignedPreset: "levi_unsigned",
+  uploadPreset: "levi_unsigned",
   folderPosts: "uploads/posts",
   folderPosters: "uploads/posts/posters",
-  folderProfiles: "uploads/profiles",
 };
 
-function dataURLtoBlob(dataUrl: string): Blob {
-  const [header, data] = dataUrl.split(",");
-  const mime = header.match(/data:(.*?);/)?.[1] || "image/jpeg";
-  const bin = atob(data);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return new Blob([arr], { type: mime });
-}
+// Einfache Response-Typen
+export type CloudinaryUploadResponse = {
+  secure_url: string;
+  public_id: string;
+  resource_type: "image" | "video" | "raw" | string;
+  width?: number;
+  height?: number;
+  format?: string;
+};
 
-// Generischer Upload (Bild/Video)
-export async function uploadToCloudinary(file: File | Blob, folder: string) {
+// Generische Upload-Funktion (auto = erkennt image/video)
+export async function uploadToCloudinary(
+  file: File,
+  folder = CLOUDINARY.folderPosts
+): Promise<CloudinaryUploadResponse> {
+  const { cloudName, uploadPreset } = CLOUDINARY;
+
   const fd = new FormData();
   fd.append("file", file);
-  fd.append("upload_preset", CLOUDINARY.unsignedPreset);
+  fd.append("upload_preset", uploadPreset);
   fd.append("folder", folder);
   fd.append("use_filename", "true");
   fd.append("unique_filename", "true");
 
   const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/auto/upload`,
-    { method: "POST", body: fd }
+    `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+    {
+      method: "POST",
+      body: fd,
+    }
   );
+
   const data = await res.json();
-  if (!res.ok || !data.secure_url) {
+  if (!res.ok || !data?.secure_url) {
+    console.error("Cloudinary upload failed:", data);
     throw new Error(
-      data.error?.message || data.message || "Cloudinary upload failed"
+      data?.error?.message || data?.message || `Upload failed (${res.status})`
     );
   }
-  return data as { secure_url: string; public_id: string; [k: string]: any };
+  return data as CloudinaryUploadResponse;
 }
 
-// Poster-Upload aus DataURL
-export async function uploadPosterDataUrl(dataUrl: string) {
-  const blob = dataURLtoBlob(dataUrl);
-  return uploadToCloudinary(blob, CLOUDINARY.folderPosters);
+// Poster-Upload aus dataURL (immer image/upload)
+export async function uploadPosterDataUrl(
+  dataUrl: string,
+  folder = CLOUDINARY.folderPosters
+): Promise<CloudinaryUploadResponse> {
+  const { cloudName, uploadPreset } = CLOUDINARY;
+
+  const fd = new FormData();
+  fd.append("file", dataUrl);
+  fd.append("upload_preset", uploadPreset);
+  fd.append("folder", folder);
+  fd.append("use_filename", "true");
+  fd.append("unique_filename", "true");
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    {
+      method: "POST",
+      body: fd,
+    }
+  );
+
+  const data = await res.json();
+  if (!res.ok || !data?.secure_url) {
+    console.error("Cloudinary poster upload failed:", data);
+    throw new Error(
+      data?.error?.message ||
+        data?.message ||
+        `Poster upload failed (${res.status})`
+    );
+  }
+  return data as CloudinaryUploadResponse;
 }
 
-// (Optional) Delivery-URL Builder mit Transformationen
+// Optional: Delivery-URL Builder (Transformationen)
 export function buildCloudinaryUrl(url: string, transforms: string): string {
   if (!/res\.cloudinary\.com/.test(url)) return url;
   const parts = url.split("/upload/");
   if (parts.length !== 2) return url;
-  return `${parts[0]}/upload/${transforms}/${parts[1]}`;
+  const base = parts[0];
+  const rest = parts[1];
+  return `${base}/upload/${transforms}/${rest}`;
 }
