@@ -84,7 +84,7 @@ html.kb-open-any .dock-at-kb {
   bottom: var(--kb-offset, 0) !important; /* andock direkt über Tastatur */
 }
 
-html.kb-open-any .hide-when-kb {
+html.kb-open-any .bottom-nav {
   transform: translateY(100%);
 }
 

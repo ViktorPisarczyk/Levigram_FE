@@ -53,6 +53,6 @@
   }
 }
 
-html.kb-open-any .bottom-nav {
-  transform: translateY(100%);
+html.kb-open-any body .bottom-nav {
+  transform: translateY(100%) !important;
 }
