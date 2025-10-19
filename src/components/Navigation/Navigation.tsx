@@ -6,12 +6,6 @@ import {
   togglePostForm,
   toggleProfileEdit,
   toggleSearchForm,
-  openPostForm,
-  closePostForm,
-  openProfileEdit,
-  closeProfileEdit,
-  openSearchForm,
-  closeSearchForm,
 } from "../../redux/uiSlice";
 
 import { toggleDarkMode } from "../../redux/features/theme/themeSlice";
@@ -53,25 +47,13 @@ const Navigation: React.FC<NavigationProps> = ({
   );
 
   const handleSearchClick = () => {
-    if (isSearchFormOpen) {
-      dispatch(closeSearchForm());
-    } else {
-      dispatch(openSearchForm());
-    }
+    dispatch(toggleSearchForm());
   };
   const handlePostClick = () => {
-    if (isPostFormOpen) {
-      dispatch(closePostForm());
-    } else {
-      dispatch(openPostForm());
-    }
+    dispatch(togglePostForm());
   };
   const handleProfileClick = () => {
-    if (isProfileEditOpen) {
-      dispatch(closeProfileEdit());
-    } else {
-      dispatch(openProfileEdit());
-    }
+    dispatch(toggleProfileEdit());
   };
 
   return (

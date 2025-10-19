@@ -70,30 +70,6 @@ const Home: React.FC = () => {
     setHasMore(data.hasMore);
   }, [data]);
 
-  // Body-Klasse für Overlay-Status
-  useEffect(() => {
-    const hasOverlay = isPostFormOpen || isProfileEditOpen || isSearchFormOpen;
-    const root = document.documentElement;
-    root.classList.toggle("ui-overlay-open", !!hasOverlay);
-    return () => root.classList.remove("ui-overlay-open");
-  }, [isPostFormOpen, isProfileEditOpen, isSearchFormOpen]);
-
-  // Suche ausführen (aus SearchForm)
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) {
-      setSearchActive(false);
-      setSearchItems([]);
-      return;
-    }
-    setSearchActive(true);
-    const res = await triggerSearch({ q: query })
-      .unwrap()
-      .catch(() => []);
-    setSearchItems(Array.isArray(res) ? res : []);
-  };
-
-  const currentList = searchActive ? searchItems : feedItems;
-
   // State: Ist ein Eingabefeld (input/textarea/contenteditable) fokussiert?
   const [inputFocused, setInputFocused] = useState(false);
   useEffect(() => {
@@ -117,6 +93,37 @@ const Home: React.FC = () => {
 
   // State für globales Post-Edit-Overlay
   const [editPost, setEditPost] = useState<FeedItem | null>(null);
+
+  // Body-Klasse für Overlay-Status
+  useEffect(() => {
+    const hasOverlay =
+      isPostFormOpen || isProfileEditOpen || isSearchFormOpen || !!editPost;
+    const root = document.documentElement;
+    root.classList.toggle("ui-overlay-open", !!hasOverlay);
+    return () => root.classList.remove("ui-overlay-open");
+  }, [isPostFormOpen, isProfileEditOpen, isSearchFormOpen, editPost]);
+
+  // Suche ausführen (aus SearchForm)
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchActive(false);
+      setSearchItems([]);
+      return;
+    }
+    setSearchActive(true);
+    const res = await triggerSearch({ q: query })
+      .unwrap()
+      .catch(() => []);
+    setSearchItems(Array.isArray(res) ? res : []);
+  };
+
+  const currentList = searchActive ? searchItems : feedItems;
+
+  // Callback für PostCreateForm, damit nach dem Erstellen der Feed auf Seite 1 springt
+  const handlePostFormClose = () => {
+    setPage(1);
+    dispatch(closePostForm());
+  };
 
   return (
     <>
@@ -146,10 +153,10 @@ const Home: React.FC = () => {
               className="blur-overlay"
               onClick={(e) => {
                 e.stopPropagation();
-                dispatch(closePostForm());
+                handlePostFormClose();
               }}
             />
-            <PostCreateForm onClose={() => dispatch(closePostForm())} />
+            <PostCreateForm onClose={handlePostFormClose} />
           </>
         )}
 
