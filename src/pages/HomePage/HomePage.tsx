@@ -135,7 +135,15 @@ const Home: React.FC = () => {
           {currentList.map((post, idx) => {
             const isLast = !searchActive && idx === currentList.length - 1;
             return (
-              <div key={post._id} ref={isLast ? handleObserver : null}>
+              <div
+                key={post._id}
+                ref={isLast ? handleObserver : null}
+                style={
+                  isLast
+                    ? { marginBottom: "calc(var(--nav-total-h, 64px) + 16px)" }
+                    : undefined
+                }
+              >
                 <PostComponent post={post} onEdit={() => setEditPost(post)} />
               </div>
             );
