@@ -108,6 +108,9 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
   };
 
   const handleLogout = () => {
+    // Token aus LocalStorage und SessionStorage entfernen
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     dispatch(logout());
     const darkMode = localStorage.getItem("darkMode") === "true";
     document.body.setAttribute("data-theme", darkMode ? "dark" : "light");
