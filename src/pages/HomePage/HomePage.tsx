@@ -133,11 +133,11 @@ const Home: React.FC = () => {
         {/* Feed */}
         <div className="post-feed">
           {currentList.map((post, idx) => {
-            const isLast = !searchActive && idx === currentList.length - 1;
+            const isLast = idx === currentList.length - 1;
             return (
               <div
                 key={post._id}
-                ref={isLast ? handleObserver : null}
+                ref={isLast && !searchActive ? handleObserver : null}
                 style={
                   isLast
                     ? { marginBottom: "calc(var(--nav-total-h, 64px) + 16px)" }
