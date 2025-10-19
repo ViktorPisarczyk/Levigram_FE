@@ -120,9 +120,8 @@ const Home: React.FC = () => {
   const currentList = searchActive ? searchItems : feedItems;
 
   // Callback für PostCreateForm, damit nach dem Erstellen der Feed auf Seite 1 springt
-  const handlePostFormClose = () => {
+  const handlePostCreated = () => {
     setPage(1);
-    dispatch(closePostForm());
   };
 
   return (
@@ -153,10 +152,13 @@ const Home: React.FC = () => {
               className="blur-overlay"
               onClick={(e) => {
                 e.stopPropagation();
-                handlePostFormClose();
+                // Kein closePostForm dispatch mehr hier
               }}
             />
-            <PostCreateForm onClose={handlePostFormClose} />
+            <PostCreateForm
+              onClose={() => {}}
+              onPostCreated={handlePostCreated}
+            />
           </>
         )}
 
@@ -166,10 +168,10 @@ const Home: React.FC = () => {
               className="blur-overlay"
               onClick={(e) => {
                 e.stopPropagation();
-                dispatch(closeProfileEdit());
+                // Kein closeProfileEdit dispatch mehr hier
               }}
             />
-            <ProfileEditForm onClose={() => dispatch(closeProfileEdit())} />
+            <ProfileEditForm onClose={() => {}} />
           </>
         )}
 

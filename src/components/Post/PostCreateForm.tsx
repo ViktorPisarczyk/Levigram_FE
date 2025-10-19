@@ -17,6 +17,7 @@ import { postsApi } from "../../redux/apiSlice";
 ---------------------------- */
 interface PostCreateFormProps {
   onClose: () => void;
+  onPostCreated?: () => void;
   triggerRef?: React.RefObject<HTMLElement>;
 }
 
@@ -131,6 +132,7 @@ async function makePosterFromVideo(
 
 const PostCreateForm: React.FC<PostCreateFormProps> = ({
   onClose,
+  onPostCreated,
   triggerRef,
 }) => {
   const [createPost, { isLoading: creating }] = useCreatePostMutation();
@@ -291,6 +293,7 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
 
       setContent("");
       setMediaFiles([]);
+      if (onPostCreated) onPostCreated();
       onClose();
     } catch (err: any) {
       console.error("Upload/Create error:", err?.data || err?.message || err);
