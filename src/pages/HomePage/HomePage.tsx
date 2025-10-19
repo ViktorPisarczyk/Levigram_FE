@@ -152,7 +152,7 @@ const Home: React.FC = () => {
               className="blur-overlay"
               onClick={(e) => {
                 e.stopPropagation();
-                // Kein closePostForm dispatch mehr hier
+                dispatch(closePostForm());
               }}
             />
             <PostCreateForm
@@ -168,7 +168,7 @@ const Home: React.FC = () => {
               className="blur-overlay"
               onClick={(e) => {
                 e.stopPropagation();
-                // Kein closeProfileEdit dispatch mehr hier
+                dispatch(closeProfileEdit());
               }}
             />
             <ProfileEditForm onClose={() => {}} />
