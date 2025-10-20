@@ -107,7 +107,17 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Call backend to clear session cookie
+    try {
+      await fetch("/users/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      // Ignore errors, proceed with local logout
+      console.warn("Logout request failed", err);
+    }
     // Token aus LocalStorage und SessionStorage entfernen
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
