@@ -353,13 +353,17 @@
           strong {
             font-weight: 600;
             color: var(--text);
+            line-height: 1;
+            display: inline-block;
+            vertical-align: baseline;
           }
 
           small {
             color: var(--placeholder-text);
             font-size: 0.75rem;
-            position: relative;
-            top: 1px;
+            line-height: 1;
+            display: inline-block;
+            vertical-align: baseline;
           }
         }
 
