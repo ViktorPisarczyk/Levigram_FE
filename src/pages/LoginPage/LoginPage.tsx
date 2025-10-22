@@ -112,7 +112,7 @@ const Login: React.FC = () => {
           </div>
 
           <button type="submit" className="btn">
-            {isLogin ? "Log In" : "Create new account"}
+            {isLogin ? "Log In" : "Neuen account erstellen"}
           </button>
         </form>
 
