@@ -24,6 +24,7 @@
         margin-right: 10px;
         cursor: pointer;
       }
+
       .author-text {
         display: flex;
         flex-direction: column;
@@ -39,39 +40,39 @@
           color: #888;
         }
       }
+    }
 
-      .post-options {
-        position: relative;
+    .post-options {
+      position: relative;
 
-        .dropdown-toggle {
+      .dropdown-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: var(--placeholder-text);
+      }
+
+      .dropdown-menu {
+        position: absolute;
+        top: 20px;
+        right: 0;
+        background: var(--textarea);
+        border-radius: 0.2rem;
+        box-shadow: var(--box-shadow);
+        z-index: 10;
+        min-width: 5rem;
+
+        button {
+          display: block;
+          padding: 10px;
+          width: 100%;
           background: none;
           border: none;
+          text-align: left;
           cursor: pointer;
-          font-size: 1.1rem;
-          color: var(--placeholder-text);
-        }
-
-        .dropdown-menu {
-          position: absolute;
-          top: 20px;
-          right: 0;
-          background: var(--textarea);
-          border-radius: 0.2rem;
-          box-shadow: var(--box-shadow);
-          z-index: 10;
-          min-width: 5rem;
-
-          button {
-            display: block;
-            padding: 10px;
-            width: 100%;
-            background: none;
-            border: none;
-            text-align: left;
-            cursor: pointer;
-            font-size: 0.85rem;
-            color: var(--text);
-          }
+          font-size: 0.85rem;
+          color: var(--text);
         }
       }
     }
@@ -344,31 +345,21 @@
 
         .comment-author-meta {
           display: flex;
-          flex-direction: row; /* name and date inline */
-          align-items: center; /* vertically center relative to avatar */
-          gap: 6px;
+          flex-grow: 1;
+          gap: 8px;
+          align-items: baseline;
           margin-left: 12px;
-          min-width: 0;
 
           strong {
             font-weight: 600;
             color: var(--text);
-            line-height: 1;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            max-width: 160px;
           }
 
           small {
             color: var(--placeholder-text);
             font-size: 0.75rem;
-            line-height: 1;
-            margin-left: 6px;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            max-width: 120px;
+            position: relative;
+            top: 1px;
           }
         }
 
