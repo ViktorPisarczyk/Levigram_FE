@@ -345,21 +345,35 @@
 
         .comment-author-meta {
           display: flex;
-          flex-grow: 1;
-          gap: 8px;
+          flex-direction: column;
+          justify-content: center;
           align-items: center;
+          gap: 2px;
           margin-left: 12px;
+          min-width: 0;
 
           strong {
             font-weight: 600;
             color: var(--text);
+            line-height: 1.1;
+            text-align: center;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 160px;
           }
 
           small {
             color: var(--placeholder-text);
             font-size: 0.75rem;
-            position: relative;
-            top: 1px;
+            line-height: 1;
+            margin-top: 2px;
+            position: static;
+            text-align: center;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 160px;
           }
         }
 
