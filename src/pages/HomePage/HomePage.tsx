@@ -63,6 +63,21 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (!data) return;
     setFeedItems((prev) => {
+      // If we're loading page 1, prefer the server's ordering (newest first)
+      // and ensure we don't keep the old ordering which would push new items
+      // to the bottom. For page > 1, preserve the previous behaviour (append
+      // new items while de-duplicating).
+      if (page === 1) {
+        const map = new Map<string, FeedItem>();
+        // Insert the fresh page items first (they are newest)
+        for (const it of data.items) map.set(it._id, it);
+        // Then append any existing items that aren't included in page 1
+        for (const p of prev) {
+          if (!map.has(p._id)) map.set(p._id, p);
+        }
+        return Array.from(map.values());
+      }
+
       const map = new Map(prev.map((p) => [p._id, p]));
       for (const it of data.items) map.set(it._id, it);
       return Array.from(map.values());
@@ -119,9 +134,17 @@ const Home: React.FC = () => {
 
   const currentList = searchActive ? searchItems : feedItems;
 
-  // Callback für PostCreateForm, damit nach dem Erstellen der Feed auf Seite 1 springt
-  const handlePostCreated = () => {
+  // Callback für PostCreateForm: optionales neues Post-Objekt wird sofort
+  // vorne in die Liste eingefügt; außerdem setzen wir die Seite auf 1.
+  const handlePostCreated = (newPost?: FeedItem) => {
     setPage(1);
+    if (newPost) {
+      setFeedItems((prev) => {
+        // Avoid duplicate
+        if (prev.some((p) => p._id === newPost._id)) return prev;
+        return [newPost, ...prev];
+      });
+    }
   };
 
   return (

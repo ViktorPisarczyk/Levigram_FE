@@ -15,9 +15,11 @@ import { postsApi } from "../../redux/apiSlice";
 /* ---------------------------
    Props & lokale Typen
 ---------------------------- */
+import type { FeedItem } from "../../types/models";
+
 interface PostCreateFormProps {
   onClose: () => void;
-  onPostCreated?: () => void;
+  onPostCreated?: (post?: FeedItem) => void;
   triggerRef?: React.RefObject<HTMLElement>;
 }
 
@@ -286,15 +288,22 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
     try {
       const uploads = await uploadMediaFiles(mediaFiles);
 
-      await createPost({ content, media: uploads }).unwrap();
+      const created = await createPost({ content, media: uploads }).unwrap();
 
       // Feed-Query invalidieren, damit der Feed neu geladen wird
       dispatch(postsApi.util.invalidateTags([{ type: "FeedPage", id: 1 }]));
 
       setContent("");
       setMediaFiles([]);
-      if (onPostCreated) onPostCreated();
+      if (onPostCreated) onPostCreated(created);
       onClose();
+
+      // Vollständigen Reload ausführen, damit der Feed und alle Caches
+      // sicher mit dem neuesten Post synchronisiert werden.
+      if (typeof window !== "undefined") {
+        // Kurze Verzögerung, damit das Overlay/Modal richtig schließt
+        setTimeout(() => window.location.reload(), 100);
+      }
     } catch (err: any) {
       console.error("Upload/Create error:", err?.data || err?.message || err);
       alert(

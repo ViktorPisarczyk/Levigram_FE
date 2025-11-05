@@ -8,7 +8,7 @@ export default {
   title: "Components/MediaCarousel",
   component: MediaCarousel,
   decorators: [
-    (Story) => (
+    (Story: any) => (
       <Provider store={store}>
         <MemoryRouter>
           <Story />

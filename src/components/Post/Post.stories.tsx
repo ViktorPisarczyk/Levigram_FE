@@ -8,7 +8,7 @@ export default {
   title: "Components/Post",
   component: PostComponent,
   decorators: [
-    (Story) => (
+    (Story: any) => (
       <Provider store={store}>
         <MemoryRouter>
           <Story />
