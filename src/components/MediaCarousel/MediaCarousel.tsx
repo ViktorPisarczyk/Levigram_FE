@@ -446,17 +446,81 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                 isVideo ? (
                   // Video erst beim Klick laden (preload=none)
                   playingIndex === index ? (
-                    <video
-                      ref={(el) => {
-                        if (el) videoRefs.current[index] = el;
-                      }}
-                      src={item.url}
-                      poster={poster}
-                      controls
-                      playsInline
-                      preload="none"
-                      className="post-media"
-                    />
+                    <div className="video-wrapper">
+                      <video
+                        ref={(el) => {
+                          if (el) videoRefs.current[index] = el;
+                        }}
+                        src={item.url}
+                        poster={poster}
+                        controls
+                        playsInline
+                        preload="none"
+                        className="post-media"
+                      />
+                      <div
+                        className="image-actions"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={() => {
+                            const base = `levigram-${index + 1}`;
+                            const ext = (
+                              item.url.split(".").pop() || "mp4"
+                            ).split("?")[0];
+                            downloadImage(item.url, `${base}.${ext}`);
+                          }}
+                          aria-label="Video herunterladen"
+                          title="Download"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isUiOverlayOpen()) return;
+                            openGallery(index);
+                          }}
+                          aria-label="Video im Vollbild anzeigen"
+                          title="Vollbild"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="21" y1="3" x2="14" y2="10"></line>
+                            <polyline points="9 21 3 21 3 15"></polyline>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   ) : poster ? (
                     <div
                       className="video-poster"
@@ -480,6 +544,68 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
                           />
                           <polygon points="40,30 70,50 40,70" fill="white" />
                         </svg>
+                      </div>
+                      <div
+                        className="image-actions"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={() => {
+                            const base = `levigram-${index + 1}`;
+                            const ext = (
+                              item.url.split(".").pop() || "mp4"
+                            ).split("?")[0];
+                            downloadImage(item.url, `${base}.${ext}`);
+                          }}
+                          aria-label="Video herunterladen"
+                          title="Download"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isUiOverlayOpen()) return;
+                            openGallery(index);
+                          }}
+                          aria-label="Video im Vollbild anzeigen"
+                          title="Vollbild"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="21" y1="3" x2="14" y2="10"></line>
+                            <polyline points="9 21 3 21 3 15"></polyline>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   ) : (
@@ -649,35 +775,36 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
             </svg>
           </button>
 
-          {!/\.(mp4|mov|webm|ogg)$/i.test(media[galleryIndex].url) && (
-            <button
-              className="gallery-download"
-              onClick={() => {
-                const url = media[galleryIndex].url;
-                const base = `levigram-${galleryIndex + 1}`;
-                const ext = (url.split(".").pop() || "jpg").split("?")[0];
-                downloadImage(url, `${base}.${ext}`);
-              }}
-              aria-label="Bild herunterladen"
-              title="Download"
+          <button
+            className="gallery-download"
+            onClick={() => {
+              const url = media[galleryIndex].url;
+              const base = `levigram-${galleryIndex + 1}`;
+              const ext = (
+                url.split(".").pop() ||
+                (/(mp4|mov|webm|ogg)$/i.test(url) ? "mp4" : "jpg")
+              ).split("?")[0];
+              downloadImage(url, `${base}.${ext}`);
+            }}
+            aria-label="Medien herunterladen"
+            title="Download"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-            </button>
-          )}
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
 
           {media.length > 1 && (
             <div className="gallery-dots">
