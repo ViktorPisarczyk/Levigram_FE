@@ -173,7 +173,6 @@
 .gallery-media,
 .pz-wrap {
   max-width: 100%;
-  max-height: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -181,9 +180,24 @@
   display: block;
 }
 
-/* (Optional) Minimalpuffer, falls Video-Controls optisch stören */
+/* Bilder wollen den vollen Platz nutzen; Videos haben native Controls
+   die zusätzlich Platz brauchen, daher ziehen wir eine kleine Höhe
+   für Controls ab, damit das sichtbare Medien-Panel für beide Typen
+   gleich groß wirkt. Falls Controls auf deinem System kleiner/größer
+   sind, passe die 48px entsprechend an. */
+.gallery-frame img.gallery-media,
+.pz-wrap img {
+  max-height: 100%;
+}
+
 .gallery-frame video.gallery-media {
-  max-height: calc(100% - 0px); /* bei Bedarf 40–48px abziehen */
+  /* Reserve Platz für Controls (ca. 48px). Tweak bei Bedarf */
+  max-height: calc(100% - 48px);
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
 
 /* PinchZoom Wrapper & Bild */

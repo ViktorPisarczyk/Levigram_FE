@@ -7,15 +7,6 @@ import { store } from "../../redux/store";
 export default {
   title: "Components/PostCreateForm",
   component: PostCreateForm,
-  decorators: [
-    (Story: any) => (
-      <Provider store={store}>
-        <MemoryRouter>
-          <Story />
-        </MemoryRouter>
-      </Provider>
-    ),
-  ],
 };
 
 export const Default = () => (

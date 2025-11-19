@@ -1,26 +1,16 @@
-import React from "react";
-import { Provider } from "react-redux";
-import { MemoryRouter } from "react-router-dom";
 import MediaCarousel from "./MediaCarousel";
-import { store } from "../../redux/store";
 
 export default {
   title: "Components/MediaCarousel",
   component: MediaCarousel,
-  decorators: [
-    (Story: any) => (
-      <Provider store={store}>
-        <MemoryRouter>
-          <Story />
-        </MemoryRouter>
-      </Provider>
-    ),
-  ],
 };
 
 const sampleMedia = [
-  { url: "/src/assets/images/94597.jpg" },
-  { url: "/src/assets/images/defaultAvatar.png" },
+  { url: "/screenshots/CreateAccount.png" },
+  { url: "/screenshots/CreatePost.png" },
+  { url: "/screenshots/LoginPage.png" },
+  { url: "/screenshots/Profile.png" },
+  { url: "/screenshots/Search.png" },
 ];
 
 export const Default = () => <MediaCarousel media={sampleMedia} />;

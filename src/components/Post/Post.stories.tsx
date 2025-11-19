@@ -1,31 +1,31 @@
-import React from "react";
-import { Provider } from "react-redux";
-import { MemoryRouter } from "react-router-dom";
 import PostComponent from "./Post";
-import { store } from "../../redux/store";
 
 export default {
   title: "Components/Post",
   component: PostComponent,
-  decorators: [
-    (Story: any) => (
-      <Provider store={store}>
-        <MemoryRouter>
-          <Story />
-        </MemoryRouter>
-      </Provider>
-    ),
-  ],
 };
 
 const mockPost = {
   _id: "p1",
-  author: { _id: "u1", username: "alice", profilePicture: undefined },
+  author: { _id: "u1", username: "Viktor", profilePicture: undefined },
   content: "Das ist ein Beispiel-Post für Storybook.",
-  media: [],
-  likes: [],
-  comments: [],
+  media: [{ url: "/screenshots/Profile.png" }],
+  likes: ["1", "2", "3"],
+  comments: [
+    {
+      _id: "c1",
+      author: { _id: "u2", username: "Alice", profilePicture: undefined },
+      content: "hallo",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      _id: "c2",
+      author: { _id: "u3", username: "Bob", profilePicture: undefined },
+      content: "wie geht's?",
+      createdAt: new Date().toISOString(),
+    },
+  ],
   createdAt: new Date().toISOString(),
 };
 
-export const Default = () => <PostComponent post={mockPost} />;
+export const Default = () => <PostComponent post={mockPost as any} />;
