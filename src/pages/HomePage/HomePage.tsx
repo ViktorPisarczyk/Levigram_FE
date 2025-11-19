@@ -187,7 +187,7 @@ const Home: React.FC = () => {
               }}
             />
             <PostCreateForm
-              onClose={() => {}}
+              onClose={() => dispatch(closePostForm())}
               onPostCreated={handlePostCreated}
             />
           </>
@@ -202,7 +202,7 @@ const Home: React.FC = () => {
                 dispatch(closeProfileEdit());
               }}
             />
-            <ProfileEditForm onClose={() => {}} />
+            <ProfileEditForm onClose={() => dispatch(closeProfileEdit())} />
           </>
         )}
 

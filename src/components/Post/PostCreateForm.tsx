@@ -361,7 +361,15 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
 
         <div className="actions">
           <button
-            onClick={onClose}
+            type="button"
+            onClick={() => {
+              console.debug("PostCreateForm: cancel clicked", {
+                uploading,
+                creating,
+              });
+              if (uploading || creating) return;
+              onClose();
+            }}
             disabled={uploading || creating}
             className="cancel-button"
           >
