@@ -456,7 +456,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     } catch (err) {
       console.error("Download fehlgeschlagen:", err);
       showToast("Download fehlgeschlagen");
-      window.open(url, "_blank", "noopener,noreferrer");
+      // Don't open the media URL in a new tab on error (iOS will show a preview page
+      // when the user dismisses the share dialog). Just show feedback and stop.
+      return;
     }
   };
 
@@ -859,21 +861,8 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
           )}
         </div>
       )}
-      {media.length > 1 && (
-        <div className="gallery-dots">
-          {media.map((_, idx) => (
-            <button
-              key={`gdot-${idx}`}
-              onClick={() => galleryInstanceRef.current?.moveToIdx(idx)}
-              className={
-                galleryIndex === idx ? "gallery-dot active" : "gallery-dot"
-              }
-              aria-label={`Bild ${idx + 1} von ${media.length}`}
-              title={`Bild ${idx + 1}`}
-            />
-          ))}
-        </div>
-      )}
+      {/* gallery-dots are rendered inside the modal only; do not render a second
+      copy here (it previously leaked into the bottom navigation) */}
       {toast && <div className="mc-toast">{toast}</div>}
     </div>
   );
