@@ -403,23 +403,59 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
   }, [isGalleryOpen, galleryInstanceRef]);
 
   // Download helper
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string, ms = 2000) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), ms);
+  };
+
   const downloadImage = async (url: string, filename?: string) => {
     try {
+      // Try native share when available (improves iOS/Android behavior)
+      const isFileLike = /\.(mp4|mov|webm|ogg|jpg|jpeg|png|webp)$/i.test(url);
+      if (typeof navigator.share === "function" && isFileLike) {
+        try {
+          // Attempt to fetch the blob and use the Web Share API with files
+          const res = await fetch(url, { credentials: "omit", mode: "cors" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const blob = await res.blob();
+          const file = new File(
+            [blob],
+            filename || url.split("/").pop() || "media",
+            { type: blob.type }
+          );
+          if ((navigator as any).canShare?.({ files: [file] })) {
+            await (navigator as any).share({ files: [file] });
+            showToast("Teilen/Herunterladen gestartet");
+            return;
+          }
+        } catch (err) {
+          // Fall through to normal download
+          console.warn("Share API fallback", err);
+        }
+      }
+
+      // Fallback: download via blob+anchor
       const res = await fetch(url, { credentials: "omit", mode: "cors" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = objectUrl;
-      a.download = filename || url.split("/").pop() || "image";
+      a.download = filename || url.split("/").pop() || "media";
+      // Try to make click more reliable
+      a.style.display = "none";
       document.body.appendChild(a);
       a.click();
       setTimeout(() => {
         URL.revokeObjectURL(objectUrl);
         a.remove();
-      }, 0);
+      }, 1500);
+      showToast("Download gestartet");
     } catch (err) {
       console.error("Download fehlgeschlagen:", err);
+      showToast("Download fehlgeschlagen");
       window.open(url, "_blank", "noopener,noreferrer");
     }
   };
@@ -823,6 +859,22 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
           )}
         </div>
       )}
+      {media.length > 1 && (
+        <div className="gallery-dots">
+          {media.map((_, idx) => (
+            <button
+              key={`gdot-${idx}`}
+              onClick={() => galleryInstanceRef.current?.moveToIdx(idx)}
+              className={
+                galleryIndex === idx ? "gallery-dot active" : "gallery-dot"
+              }
+              aria-label={`Bild ${idx + 1} von ${media.length}`}
+              title={`Bild ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+      {toast && <div className="mc-toast">{toast}</div>}
     </div>
   );
 };
