@@ -154,11 +154,9 @@
 .gallery-slide {
   display: grid;
   place-items: center;
-  width: var(--gallery-max-w);
-  max-width: 100vw;
-  height: var(--gallery-max-h);
-  max-height: var(--gallery-max-h);
-  margin: 0 auto;
+  width: 100vw;
+  height: var(--gallery-media-h);
+  margin: 0;
 }
 
 /* Gemeinsamer Rahmen für beide Medientypen */
@@ -166,22 +164,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--gallery-max-w);
-  max-width: 100vw;
-  height: var(--gallery-max-h);
-  max-height: var(--gallery-max-h);
+  width: 100vw;
+  height: var(--gallery-media-h);
   background: #000;
 }
 
 /* Bild/Video im Full View: gleiche Constraints */
+/* Make the media box fill width and height of gallery frame so both
+   images and videos occupy identical bounding boxes and touch edges */
 .gallery-media,
 .pz-wrap {
-  max-width: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  background: #000;
+  width: 100vw;
+  height: 100%;
+  max-width: 100vw;
   display: block;
+  background: #000;
 }
 
 /* Bilder wollen den vollen Platz nutzen; Videos haben native Controls
@@ -193,14 +190,13 @@
 .gallery-frame video.gallery-media,
 .pz-wrap img,
 .pz-wrap video {
-  /* Force both media types to the same visual size */
-  max-height: var(--gallery-media-h);
-  max-width: calc(100vw - 48px);
-  width: auto;
-  height: auto;
+  /* Force both media types to occupy the same box
+     and fill it, cropping where necessary */
+  width: 100vw;
+  height: 100%;
+  object-fit: cover;
   display: block;
-  margin: 0 auto;
-  object-fit: contain;
+  margin: 0;
 }
 
 /* PinchZoom Wrapper & Bild */
