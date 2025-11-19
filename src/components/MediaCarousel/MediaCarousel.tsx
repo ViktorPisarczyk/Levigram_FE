@@ -412,27 +412,51 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
 
   const downloadImage = async (url: string, filename?: string) => {
     try {
-      // Try native share when available (improves iOS/Android behavior)
+      // Prefer opening the native share sheet without causing navigation.
+      // navigator.share({ url }) is less likely to navigate on cancel than
+      // opening the blob in a new tab. Try that first when supported.
       const isFileLike = /\.(mp4|mov|webm|ogg|jpg|jpeg|png|webp)$/i.test(url);
-      if (typeof navigator.share === "function" && isFileLike) {
+      if (typeof navigator.share === "function") {
         try {
-          // Attempt to fetch the blob and use the Web Share API with files
-          const res = await fetch(url, { credentials: "omit", mode: "cors" });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const blob = await res.blob();
-          const file = new File(
-            [blob],
-            filename || url.split("/").pop() || "media",
-            { type: blob.type }
-          );
-          if ((navigator as any).canShare?.({ files: [file] })) {
-            await (navigator as any).share({ files: [file] });
-            showToast("Teilen/Herunterladen gestartet");
+          // Try simple share with URL first (no file download). On iOS this
+          // opens the native share dialog and if the user cancels nothing
+          // else happens — avoiding a preview navigation.
+          await (navigator as any).share({ url, title: filename || undefined });
+          showToast("Teilen/Herunterladen gestartet");
+          return;
+        } catch (err) {
+          // share() may throw on cancel or unsupported data; if it's a cancel
+          // we don't want to fallback to opening the URL — so only continue
+          // when share is not supported for this payload.
+          // If the error is simply "AbortError" or the user cancelled, stop.
+          const name = (err && (err as any).name) || "";
+          if (name === "AbortError" || name === "NotAllowedError") {
+            // User cancelled — do nothing further.
             return;
           }
-        } catch (err) {
-          // Fall through to normal download
-          console.warn("Share API fallback", err);
+          // Otherwise try file-based share if available and sensible.
+          if (isFileLike && (navigator as any).canShare) {
+            try {
+              const res = await fetch(url, {
+                credentials: "omit",
+                mode: "cors",
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const blob = await res.blob();
+              const file = new File(
+                [blob],
+                filename || url.split("/").pop() || "media",
+                { type: blob.type }
+              );
+              if ((navigator as any).canShare({ files: [file] })) {
+                await (navigator as any).share({ files: [file] });
+                showToast("Teilen/Herunterladen gestartet");
+                return;
+              }
+            } catch (err2) {
+              console.warn("File share fallback failed", err2);
+            }
+          }
         }
       }
 
@@ -446,6 +470,8 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
       a.download = filename || url.split("/").pop() || "media";
       // Try to make click more reliable
       a.style.display = "none";
+      // Ensure we do not open in the current browsing context which could
+      // navigate away on some mobile browsers — avoid target attribute.
       document.body.appendChild(a);
       a.click();
       setTimeout(() => {
