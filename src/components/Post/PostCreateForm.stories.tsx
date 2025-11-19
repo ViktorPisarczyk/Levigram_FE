@@ -1,12 +1,12 @@
 import React from "react";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
-import MediaCarousel from "./MediaCarousel";
+import PostCreateForm from "./PostCreateForm";
 import { store } from "../../redux/store";
 
 export default {
-  title: "Components/MediaCarousel",
-  component: MediaCarousel,
+  title: "Components/PostCreateForm",
+  component: PostCreateForm,
   decorators: [
     (Story: any) => (
       <Provider store={store}>
@@ -18,9 +18,8 @@ export default {
   ],
 };
 
-const sampleMedia = [
-  { url: "/src/assets/images/94597.jpg" },
-  { url: "/src/assets/images/defaultAvatar.png" },
-];
-
-export const Default = () => <MediaCarousel media={sampleMedia} />;
+export const Default = () => (
+  <div style={{ padding: 20 }}>
+    <PostCreateForm onClose={() => {}} />
+  </div>
+);

@@ -17,3 +17,15 @@ export default {
     ),
   ],
 };
+
+const mockPost = {
+  _id: "p1",
+  author: { _id: "u1", username: "alice", profilePicture: undefined },
+  content: "Das ist ein Beispiel-Post für Storybook.",
+  media: [],
+  likes: [],
+  comments: [],
+  createdAt: new Date().toISOString(),
+};
+
+export const Default = () => <PostComponent post={mockPost} />;
