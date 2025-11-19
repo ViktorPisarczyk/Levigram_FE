@@ -24,6 +24,12 @@
   padding: 20px 8px 0 8px;
 }
 
+/* Defensive: hide dot indicators that might leak into nav area */
+.bottom-nav .dots,
+.bottom-nav .gallery-dots {
+  display: none !important;
+}
+
 .nav-button {
   background: none;
   border: none;

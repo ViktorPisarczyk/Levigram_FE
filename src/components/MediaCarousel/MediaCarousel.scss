@@ -302,6 +302,23 @@
   }
 }
 
+/* Toast for download feedback */
+.mc-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--nav-total-h, 64px) + 16px);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  z-index: 12000;
+  font-size: 14px;
+  pointer-events: none;
+  opacity: 0.98;
+}
+
 .media-skeleton {
   width: 100%;
   height: 100%;
