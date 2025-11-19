@@ -132,6 +132,10 @@
   --gallery-max-w: 100vw;
   --gallery-max-h: calc(100vh - var(--gallery-controls-h) - 24px);
 
+  /* Visible media height target: keeps images and videos visually equal
+    Use 60vh as requested. Tweak if you want a different coverage. */
+  --gallery-media-h: 60vh;
+
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.95);
@@ -186,18 +190,17 @@
    gleich groß wirkt. Falls Controls auf deinem System kleiner/größer
    sind, passe die 48px entsprechend an. */
 .gallery-frame img.gallery-media,
-.pz-wrap img {
-  max-height: 100%;
-}
-
-.gallery-frame video.gallery-media {
-  /* Reserve Platz für Controls (ca. 48px). Tweak bei Bedarf */
-  max-height: calc(100% - 48px);
-  max-width: 100%;
+.gallery-frame video.gallery-media,
+.pz-wrap img,
+.pz-wrap video {
+  /* Force both media types to the same visual size */
+  max-height: var(--gallery-media-h);
+  max-width: calc(100vw - 48px);
   width: auto;
   height: auto;
   display: block;
   margin: 0 auto;
+  object-fit: contain;
 }
 
 /* PinchZoom Wrapper & Bild */

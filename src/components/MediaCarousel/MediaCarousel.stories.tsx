@@ -14,3 +14,15 @@ const sampleMedia = [
 ];
 
 export const Default = () => <MediaCarousel media={sampleMedia} />;
+
+export const WithVideo = () => (
+  <MediaCarousel
+    media={[
+      { url: "/screenshots/CreateAccount.png" },
+      // Public sample mp4 (CORS-friendly) - replace if you prefer another
+      {
+        url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+      },
+    ]}
+  />
+);
