@@ -1,11 +1,11 @@
 export async function autoEnableNotifications(vapidPublicKey: string) {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window))
+  if (typeof Notification === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window))
     return null;
 
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isStandalone =
     window.matchMedia?.("(display-mode: standalone)").matches ||
-    (navigator as any).standalone;
+    (navigator as Navigator & { standalone?: boolean }).standalone;
   if (isIOS && !isStandalone) return null;
 
   if (Notification.permission === "default") {
@@ -25,18 +25,21 @@ export async function autoEnableNotifications(vapidPublicKey: string) {
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
     }));
 
-  await fetch("/push/subscribe", {
+  const response = await fetch("/push/subscribe", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(sub),
   });
+  if (!response.ok) {
+    throw new Error(`Push subscription could not be saved (${response.status})`);
+  }
 
   return sub;
 }
 
 export async function ensureSubscriptionSynced(vapidPublicKey: string) {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  if (typeof Notification === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
@@ -57,12 +60,15 @@ export async function ensureSubscriptionSynced(vapidPublicKey: string) {
     });
   }
 
-  await fetch("/push/subscribe", {
+  const response = await fetch("/push/subscribe", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(sub),
   });
+  if (!response.ok) {
+    throw new Error(`Push subscription could not be saved (${response.status})`);
+  }
 }
 
 function urlBase64ToUint8Array(base64: string) {

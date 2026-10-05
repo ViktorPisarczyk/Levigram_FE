@@ -8,7 +8,7 @@ import { Toaster } from "react-hot-toast";
 import Login from "./pages/LoginPage/LoginPage";
 import Home from "./pages/HomePage/HomePage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage/ForgotPasswordPage";
-import IosPushPrompt from "./IosPushPrompt";
+import PushPrompt from "./PushPrompt";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -192,7 +192,7 @@ const App: React.FC = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <IosPushPrompt />
+      {isAuthenticated && <PushPrompt />}
     </>
   );
 };
