@@ -9,6 +9,7 @@ import Login from "./pages/LoginPage/LoginPage";
 import Home from "./pages/HomePage/HomePage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage/ForgotPasswordPage";
 import PushPrompt from "./PushPrompt";
+import PushTestPage from "./pages/PushTestPage/PushTestPage";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -169,6 +170,7 @@ const App: React.FC = () => {
       )}
 
       <Routes>
+        <Route path="/push-test" element={<ProtectedRoute><PushTestPage /></ProtectedRoute>} />
         <Route
           path="/"
           element={
@@ -192,7 +194,7 @@ const App: React.FC = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {isAuthenticated && <PushPrompt />}
+      {isAuthenticated && location.pathname !== "/push-test" && <PushPrompt />}
     </>
   );
 };
