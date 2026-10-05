@@ -233,6 +233,7 @@ const authSlice = createSlice({
         };
       })
       .addCase(checkAuthAsync.pending, (state) => {
+        state.status = "loading";
         state.loading = true;
       })
       .addCase(checkAuthAsync.fulfilled, (state, action) => {

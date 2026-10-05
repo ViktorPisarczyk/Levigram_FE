@@ -18,7 +18,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, status } = useAppSelector((state) => state.auth);
 
-  if (status === "loading") {
+  if (status === "idle" || status === "loading") {
     return <div className="loading-screen">Loading authentication...</div>;
   }
   return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
@@ -174,7 +174,7 @@ const App: React.FC = () => {
         <Route
           path="/"
           element={
-            status === "loading" ? (
+            status === "idle" || status === "loading" ? (
               <div className="loading-screen">Loading…</div>
             ) : isAuthenticated ? (
               <Navigate to="/home" replace />
