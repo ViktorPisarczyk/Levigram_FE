@@ -1,6 +1,7 @@
 import React, {
   useState,
   useEffect,
+  useLayoutEffect,
   useRef,
   forwardRef,
   useImperativeHandle,
@@ -390,6 +391,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
       pinchRefs.current.forEach((r) => r?.reset());
     },
   });
+
+  useLayoutEffect(() => {
+    if (!isGalleryOpen) return;
+    galleryInstanceRef.current?.update(undefined, galleryInitial);
+  }, [isGalleryOpen, galleryInitial, galleryInstanceRef]);
 
   useEffect(() => {
     if (!isGalleryOpen) return;
