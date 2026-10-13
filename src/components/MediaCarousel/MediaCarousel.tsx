@@ -365,7 +365,6 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     setGalleryIndex(index);
     setIsGalleryOpen(true);
   };
-  const closeGallery = () => setIsGalleryOpen(false);
 
   useEffect(() => {
     if (isGalleryOpen) {
@@ -396,6 +395,15 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media }) => {
     if (!isGalleryOpen) return;
     galleryInstanceRef.current?.update(undefined, galleryInitial);
   }, [isGalleryOpen, galleryInitial, galleryInstanceRef]);
+
+  const closeGallery = () => {
+    const selectedIndex = galleryInstanceRef.current?.track.details.rel;
+    if (selectedIndex !== undefined) {
+      setCurrentSlide(selectedIndex);
+      instanceRef.current?.update(undefined, selectedIndex);
+    }
+    setIsGalleryOpen(false);
+  };
 
   useEffect(() => {
     if (!isGalleryOpen) return;
