@@ -20,7 +20,7 @@ import type { FeedItem } from "../../types/models";
 interface PostCreateFormProps {
   onClose: () => void;
   onPostCreated?: (post?: FeedItem) => void;
-  triggerRef?: React.RefObject<HTMLElement>;
+  triggerRef?: React.RefObject<HTMLElement | null>;
 }
 
 interface MediaFile {

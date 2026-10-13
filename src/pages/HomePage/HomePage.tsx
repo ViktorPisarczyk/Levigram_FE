@@ -187,6 +187,7 @@ const Home: React.FC = () => {
               }}
             />
             <PostCreateForm
+              triggerRef={postButtonRef}
               onClose={() => dispatch(closePostForm())}
               onPostCreated={handlePostCreated}
             />
@@ -202,7 +203,10 @@ const Home: React.FC = () => {
                 dispatch(closeProfileEdit());
               }}
             />
-            <ProfileEditForm onClose={() => dispatch(closeProfileEdit())} />
+            <ProfileEditForm
+              triggerRef={profileButtonRef}
+              onClose={() => dispatch(closeProfileEdit())}
+            />
           </>
         )}
 
