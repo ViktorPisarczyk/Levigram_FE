@@ -4,10 +4,16 @@ export function useClickOutside(
   containerRef: React.RefObject<HTMLElement | null>,
   callback: () => void,
   excludeRef?: React.RefObject<HTMLElement | null>,
-  p0?: { dragTolerance: number; enabled: boolean }
+  options?: {
+    dragTolerance?: number;
+    enabled?: boolean;
+    ignoreSelector?: string;
+  }
 ) {
   useEffect(() => {
-    const dragTolerance = 12;
+    if (options?.enabled === false) return;
+
+    const dragTolerance = options?.dragTolerance ?? 12;
 
     let startX = 0;
     let startY = 0;
@@ -23,11 +29,18 @@ export function useClickOutside(
       return inContainer || inExclude;
     };
 
+    const shouldIgnore = (target: EventTarget | null) =>
+      !!(
+        options?.ignoreSelector &&
+        target instanceof Element &&
+        target.closest(options.ignoreSelector)
+      );
+
     const onPointerDown = (e: PointerEvent) => {
       startX = e.clientX;
       startY = e.clientY;
       moved = false;
-      startedOutside = !isInside(e.target);
+      startedOutside = !isInside(e.target) && !shouldIgnore(e.target);
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -62,5 +75,5 @@ export function useClickOutside(
       document.removeEventListener("pointerup", onPointerUp);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [containerRef, callback, excludeRef]);
+  }, [containerRef, callback, excludeRef, options]);
 }

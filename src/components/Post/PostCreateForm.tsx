@@ -159,7 +159,8 @@ const PostCreateForm: React.FC<PostCreateFormProps> = ({
         onClose();
       }
     },
-    triggerRef
+    triggerRef,
+    { ignoreSelector: ".blur-overlay" }
   );
 
   useEffect(() => {

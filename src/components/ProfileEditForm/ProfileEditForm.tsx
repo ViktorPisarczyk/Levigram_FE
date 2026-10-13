@@ -48,7 +48,8 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         onClose();
       }
     },
-    triggerRef
+    triggerRef,
+    { ignoreSelector: ".blur-overlay" }
   );
 
   useEffect(() => {
