@@ -265,12 +265,12 @@
 }
 
 .gallery-close {
-  top: 24px;
-  right: 24px;
+  top: calc(24px + env(safe-area-inset-top, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
 }
 .gallery-download {
-  top: 24px;
-  right: 104px;
+  top: calc(24px + env(safe-area-inset-top, 0px));
+  right: calc(104px + env(safe-area-inset-right, 0px));
 }
 .gallery-close svg,
 .gallery-download svg {
@@ -281,7 +281,7 @@
 /* Dots */
 .gallery-dots {
   position: fixed;
-  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
