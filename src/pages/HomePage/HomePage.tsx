@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-import { useGetFeedQuery, useLazySearchPostsQuery } from "../../redux/apiSlice";
+import {
+  useGetFeedQuery,
+  useLazyGetFeedQuery,
+  useLazySearchPostsQuery,
+} from "../../redux/apiSlice";
 import type { FeedItem } from "../../types/models";
 
 import "./HomePage.scss";
@@ -36,12 +40,18 @@ const Home: React.FC = () => {
   const [page, setPage] = useState(1);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const { data, isFetching } = useGetFeedQuery({ page });
+  const [triggerFeedRefresh] = useLazyGetFeedQuery();
   const [hasMore, setHasMore] = useState(true);
 
   // Suche
   const [triggerSearch, searchResult] = useLazySearchPostsQuery();
   const [searchActive, setSearchActive] = useState(false);
   const [searchItems, setSearchItems] = useState<FeedItem[]>([]);
+
+  // Pull-to-refresh am Anfang des Feeds
+  const touchStartY = useRef<number | null>(null);
+  const refreshingRef = useRef(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // IO für Infinite-Scroll
   const observer = useRef<IntersectionObserver | null>(null);
@@ -109,14 +119,76 @@ const Home: React.FC = () => {
   // State für globales Post-Edit-Overlay
   const [editPost, setEditPost] = useState<FeedItem | null>(null);
 
+  const hasOpenOverlay =
+    isPostFormOpen || isProfileEditOpen || isSearchFormOpen || !!editPost;
+
+  const refreshFeed = async () => {
+    if (
+      refreshingRef.current ||
+      isFetching ||
+      searchActive ||
+      hasOpenOverlay
+    ) {
+      return;
+    }
+
+    refreshingRef.current = true;
+    setIsRefreshing(true);
+    setPage(1);
+    observer.current?.disconnect();
+    const startedAt = Date.now();
+
+    try {
+      await triggerFeedRefresh({ page: 1 }, false).unwrap();
+    } catch {
+      // Keep the existing feed visible when a refresh fails.
+    } finally {
+      const remainingSpinnerTime = 450 - (Date.now() - startedAt);
+      if (remainingSpinnerTime > 0) {
+        await new Promise((resolve) =>
+          window.setTimeout(resolve, remainingSpinnerTime)
+        );
+      }
+      refreshingRef.current = false;
+      setIsRefreshing(false);
+    }
+  };
+
+  const getScrollTop = () =>
+    document.scrollingElement?.scrollTop ?? window.scrollY;
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (
+      event.touches.length !== 1 ||
+      getScrollTop() > 0 ||
+      searchActive ||
+      hasOpenOverlay ||
+      refreshingRef.current
+    ) {
+      touchStartY.current = null;
+      return;
+    }
+
+    touchStartY.current = event.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    const startY = touchStartY.current;
+    touchStartY.current = null;
+    if (startY === null || event.changedTouches.length !== 1) return;
+
+    const pullDistance = event.changedTouches[0].clientY - startY;
+    if (pullDistance >= 70 && getScrollTop() <= 0) {
+      void refreshFeed();
+    }
+  };
+
   // Body-Klasse für Overlay-Status
   useEffect(() => {
-    const hasOverlay =
-      isPostFormOpen || isProfileEditOpen || isSearchFormOpen || !!editPost;
     const root = document.documentElement;
-    root.classList.toggle("ui-overlay-open", !!hasOverlay);
+    root.classList.toggle("ui-overlay-open", hasOpenOverlay);
     return () => root.classList.remove("ui-overlay-open");
-  }, [isPostFormOpen, isProfileEditOpen, isSearchFormOpen, editPost]);
+  }, [hasOpenOverlay]);
 
   // Suche ausführen (aus SearchForm)
   const handleSearch = async (query: string) => {
@@ -149,9 +221,26 @@ const Home: React.FC = () => {
 
   return (
     <>
-      <div className="home-page">
+      <div
+        className="home-page"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          touchStartY.current = null;
+        }}
+      >
         <div ref={scrollTopRef} />
         <div ref={logoRef} className="logo" />
+
+        {isRefreshing && (
+          <div
+            className="refresh-indicator"
+            role="status"
+            aria-label="Beiträge werden aktualisiert"
+          >
+            <div className="spinner" />
+          </div>
+        )}
 
         {/* Feed */}
         <div className="post-feed">

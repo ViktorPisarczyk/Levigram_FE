@@ -178,6 +178,7 @@ export const postsApi = createApi({
 
 export const {
   useGetFeedQuery,
+  useLazyGetFeedQuery,
   useGetPostQuery,
   useLazySearchPostsQuery,
   useCreatePostMutation,
