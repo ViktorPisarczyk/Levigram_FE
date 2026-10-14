@@ -3,7 +3,7 @@
     "target": "es2020",
     "module": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowJs": false,
     "jsx": "react-jsx",
     "esModuleInterop": true,
