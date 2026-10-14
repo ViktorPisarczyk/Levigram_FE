@@ -42,9 +42,23 @@ if ("serviceWorker" in navigator) {
       const onVis = () => {
         if (document.visibilityState === "visible") {
           registration.update().catch(() => {});
+          clearAppIndicators(registration);
+        }
+      };
+      const onServiceWorkerMessage = (event: MessageEvent) => {
+        if (
+          document.visibilityState === "visible" &&
+          event.data?.type === "LEVI_NEW_POST_RECEIVED"
+        ) {
+          clearAppIndicators(registration);
         }
       };
       document.addEventListener("visibilitychange", onVis);
+      navigator.serviceWorker.addEventListener(
+        "message",
+        onServiceWorkerMessage
+      );
+      onVis();
 
       registration.update().catch(() => {});
 
@@ -64,9 +78,34 @@ if ("serviceWorker" in navigator) {
 
       window.addEventListener("beforeunload", () => {
         document.removeEventListener("visibilitychange", onVis);
+        navigator.serviceWorker.removeEventListener(
+          "message",
+          onServiceWorkerMessage
+        );
       });
     } catch (error) {
       console.error("Service Worker registration failed:", error);
     }
   });
+}
+
+async function clearAppIndicators(registration: ServiceWorkerRegistration) {
+  const navigatorWithBadging = navigator as Navigator & {
+    clearAppBadge?: () => Promise<void>;
+  };
+
+  try {
+    await navigatorWithBadging.clearAppBadge?.();
+  } catch {
+    // App icon badges are optional and unsupported in some browsers.
+  }
+
+  try {
+    const notifications = await registration.getNotifications({
+      tag: "levigram-new-post",
+    });
+    notifications.forEach((notification) => notification.close());
+  } catch {
+    // The notification list is only used to clear Android launcher dots.
+  }
 }
