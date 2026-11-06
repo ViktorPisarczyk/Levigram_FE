@@ -251,24 +251,17 @@ const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
   const { user } = useSelector((s: RootState) => s.auth);
 
   const [toggleLike] = useToggleLikeMutation();
-  const { data: likesData, isFetching: likesLoading } = useGetLikesQuery(
-    post._id,
-    {
-      // Nur laden, wenn Liste geöffnet wird – wir steuern das unten
-      skip: true,
-    }
-  );
+  const [likesOpen, setLikesOpen] = useState(false);
+  const {
+    data: likesData,
+    isFetching: loadingLikes,
+  } = useGetLikesQuery(post._id, { skip: !likesOpen });
   const [deletePost] = useDeletePostMutation();
 
   const [showDropDown, setShowDropDown] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  type Liker = { _id: string; username: string; profilePicture?: string };
-  const [likesOpen, setLikesOpen] = useState(false);
-  const [likers, setLikers] = useState<Liker[] | null>(null);
-  const [loadingLikes, setLoadingLikes] = useState(false);
 
   const hasLiked = useMemo(
     () => !!user && post.likes.includes(user._id),
@@ -309,26 +302,10 @@ const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
     }
   );
 
-  const toggleLikes = async () => {
+  const toggleLikes = () => {
     const next = !likesOpen;
     setLikesOpen(next);
     if (next) setShowCommentForm(false);
-    if (next && likers == null) {
-      try {
-        setLoadingLikes(true);
-        // Kleiner pragmatischer Call ohne extra Hook, um nicht unnötig Daten vorzuhalten:
-        const res = await fetch(`/posts/${post._id}/likes`, {
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (res.ok) setLikers(data.likes || []);
-      } catch (e) {
-        console.error("Failed to fetch likes:", e);
-      } finally {
-        setLoadingLikes(false);
-      }
-    }
   };
 
   const isOwnPost = post.author._id === user?._id;
@@ -504,12 +481,12 @@ const PostComponent: FC<PostComponentProps> = ({ post, onEdit }) => {
         aria-label="Liste der Likes"
       >
         {loadingLikes && <div className="likes-loading">Lade Likes…</div>}
-        {!loadingLikes && likers && likers.length === 0 && (
+        {!loadingLikes && likesData && likesData.likes.length === 0 && (
           <div className="likes-empty">Noch keine Likes</div>
         )}
-        {!loadingLikes && likers && likers.length > 0 && (
+        {!loadingLikes && likesData && likesData.likes.length > 0 && (
           <ul className="likes-list">
-            {likers.map((u) => (
+            {likesData.likes.map((u) => (
               <li key={u._id} className="likes-item">
                 <Avatar
                   src={u.profilePicture || defaultAvatar}

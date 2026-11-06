@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
 import {
+  postsApi,
   useGetFeedQuery,
   useLazyGetFeedQuery,
   useLazySearchPostsQuery,
@@ -52,6 +53,7 @@ const Home: React.FC = () => {
   const touchStartY = useRef<number | null>(null);
   const refreshingRef = useRef(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
 
   // IO für Infinite-Scroll
   const observer = useRef<IntersectionObserver | null>(null);
@@ -129,6 +131,7 @@ const Home: React.FC = () => {
       searchActive ||
       hasOpenOverlay
     ) {
+      setPullDistance(0);
       return;
     }
 
@@ -143,6 +146,7 @@ const Home: React.FC = () => {
     } catch {
       // Keep the existing feed visible when a refresh fails.
     } finally {
+      dispatch(postsApi.util.invalidateTags([{ type: "Likes" }]));
       const remainingSpinnerTime = 450 - (Date.now() - startedAt);
       if (remainingSpinnerTime > 0) {
         await new Promise((resolve) =>
@@ -151,6 +155,7 @@ const Home: React.FC = () => {
       }
       refreshingRef.current = false;
       setIsRefreshing(false);
+      setPullDistance(0);
     }
   };
 
@@ -166,20 +171,35 @@ const Home: React.FC = () => {
       refreshingRef.current
     ) {
       touchStartY.current = null;
+      setPullDistance(0);
       return;
     }
 
     touchStartY.current = event.touches[0].clientY;
+    setPullDistance(0);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartY.current === null || event.touches.length !== 1) return;
+
+    const rawDistance = event.touches[0].clientY - touchStartY.current;
+    setPullDistance(Math.max(0, Math.min(58, rawDistance * 0.62)));
   };
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
     const startY = touchStartY.current;
     touchStartY.current = null;
-    if (startY === null || event.changedTouches.length !== 1) return;
+    if (startY === null || event.changedTouches.length !== 1) {
+      setPullDistance(0);
+      return;
+    }
 
-    const pullDistance = event.changedTouches[0].clientY - startY;
-    if (pullDistance >= 70 && getScrollTop() <= 0) {
+    const distance = event.changedTouches[0].clientY - startY;
+    if (distance >= 70 && getScrollTop() <= 0) {
+      setPullDistance(58);
       void refreshFeed();
+    } else {
+      setPullDistance(0);
     }
   };
 
@@ -224,23 +244,39 @@ const Home: React.FC = () => {
       <div
         className="home-page"
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={() => {
           touchStartY.current = null;
+          setPullDistance(0);
         }}
       >
         <div ref={scrollTopRef} />
         <div ref={logoRef} className="logo" />
 
-        {isRefreshing && (
-          <div
-            className="refresh-indicator"
-            role="status"
-            aria-label="Beiträge werden aktualisiert"
-          >
+        <div
+          className={`refresh-indicator${isRefreshing ? " is-refreshing" : ""}${pullDistance > 0 && !isRefreshing ? " is-pulling" : ""}`}
+          role="status"
+          aria-label={isRefreshing ? "Beiträge werden aktualisiert" : "Zum Aktualisieren ziehen"}
+          aria-hidden={!isRefreshing && pullDistance === 0}
+          style={{
+            transform: `translate(-50%, ${isRefreshing ? 58 : pullDistance}px)`,
+            opacity: isRefreshing ? 1 : Math.min(pullDistance / 18, 1),
+          }}
+        >
+          {isRefreshing ? (
             <div className="spinner" />
-          </div>
-        )}
+          ) : (
+            <svg
+              className="pull-arrow"
+              style={{ transform: `rotate(${Math.min(pullDistance / 58, 1) * 180}deg)` }}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M12 4v15m-6-6 6 6 6-6" />
+            </svg>
+          )}
+        </div>
 
         {/* Feed */}
         <div className="post-feed">
