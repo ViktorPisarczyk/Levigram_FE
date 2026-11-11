@@ -160,12 +160,18 @@ const Home: React.FC = () => {
   };
 
   const getScrollTop = () =>
-    document.scrollingElement?.scrollTop ?? window.scrollY;
+    Math.max(
+      0,
+      document.scrollingElement?.scrollTop ?? 0,
+      document.documentElement.scrollTop,
+      document.body.scrollTop,
+      window.scrollY
+    );
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (
       event.touches.length !== 1 ||
-      getScrollTop() > 0 ||
+      getScrollTop() > 1 ||
       searchActive ||
       hasOpenOverlay ||
       refreshingRef.current
@@ -182,6 +188,14 @@ const Home: React.FC = () => {
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     if (touchStartY.current === null || event.touches.length !== 1) return;
 
+    // If the page starts scrolling during this touch sequence, it is a normal
+    // scroll gesture. Do not let it become a pull-to-refresh gesture later.
+    if (getScrollTop() > 1) {
+      touchStartY.current = null;
+      setPullDistance(0);
+      return;
+    }
+
     const rawDistance = event.touches[0].clientY - touchStartY.current;
     setPullDistance(Math.max(0, Math.min(58, rawDistance * 0.62)));
   };
@@ -195,7 +209,7 @@ const Home: React.FC = () => {
     }
 
     const distance = event.changedTouches[0].clientY - startY;
-    if (distance >= 70 && getScrollTop() <= 0) {
+    if (distance >= 70 && getScrollTop() <= 1) {
       setPullDistance(58);
       void refreshFeed();
     } else {
