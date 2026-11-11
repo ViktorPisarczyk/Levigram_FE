@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/de";
 import { BsCheckLg, BsThreeDots } from "react-icons/bs";
 import {
   FaRegComment,
@@ -44,7 +45,7 @@ dayjs.extend(relativeTime);
 const formatDate = (iso: string) => {
   const now = dayjs();
   const d = dayjs(iso);
-  if (now.diff(d, "hour") < 24) return d.fromNow();
+  if (now.diff(d, "hour") < 24) return d.locale("de").fromNow();
   return d.format("DD.MM.YYYY");
 };
 
