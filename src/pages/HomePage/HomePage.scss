@@ -21,11 +21,19 @@ html.kb-open-any .post-feed {
   }
 
   .post-feed {
+    position: relative;
+    top: 0;
     width: 90vw;
     max-width: 600px;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    transition: top 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: top;
+  }
+
+  .post-feed.is-pulling {
+    transition: none;
   }
 
   .loading-text,
@@ -110,6 +118,10 @@ html.ui-overlay-open .dropdown-menu {
 
 @media (prefers-reduced-motion: reduce) {
   .refresh-indicator {
+    transition: none;
+  }
+
+  .home-page .post-feed {
     transition: none;
   }
 

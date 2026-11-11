@@ -293,7 +293,10 @@ const Home: React.FC = () => {
         </div>
 
         {/* Feed */}
-        <div className="post-feed">
+        <div
+          className={`post-feed${pullDistance > 0 && !isRefreshing ? " is-pulling" : ""}`}
+          style={{ top: `${Math.min(14, (pullDistance / 58) * 14)}px` }}
+        >
           {currentList.map((post, idx) => {
             const isLast = idx === currentList.length - 1;
             return (
