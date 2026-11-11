@@ -1,10 +1,18 @@
 .post-container {
   background: var(--secondary);
-  border-radius: 0.2rem;
-  box-shadow: var(--box-shadow);
+  border: 1px solid var(--nav-border);
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
   padding: 0.5rem;
   margin: auto;
   max-width: 400px;
+
+  [data-theme="dark"] & {
+    background: linear-gradient(145deg, #303030 0%, #2c2c2c 100%);
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  }
 
   .post-header {
     display: flex;
@@ -111,10 +119,10 @@
   gap: 8px;
   min-height: 36px;
   padding: 4px 10px;
-  border: 1px solid var(--tertiary);
+  border: 1px solid rgba(45, 176, 219, 0.62);
   background: var(--textarea);
   color: var(--text);
-  border-radius: 10px;
+  border-radius: 11px;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease,
     transform 0.05s ease;
