@@ -14,7 +14,7 @@ import "./MediaCarousel.scss";
 
 /* ----------------------------------------
    OptimizedImage – mobile first
-   - FEED: genau 500x360 (c_fit) – klein & konsistent
+   - FEED: genau 600x432 (c_fit) – klein & konsistent
    - GALLERY: max ~1200px (contain)
 ---------------------------------------- */
 type ImgContext = "feed" | "gallery";
@@ -27,8 +27,8 @@ type OptimizedImageProps = {
   style?: React.CSSProperties;
 };
 
-const FEED_W = 500;
-const FEED_H = 360;
+const FEED_W = 600;
+const FEED_H = 432;
 const GALLERY_W = 1200;
 
 export const OptimizedImage = memo(function OptimizedImage({
